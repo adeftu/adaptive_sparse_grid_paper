@@ -1,0 +1,67 @@
+%\documentclass[a4paper, 10pt]{llncs}
+\documentclass{llncs}
+
+\usepackage{graphicx}
+% \usepackage{subfig}
+\usepackage{amssymb}
+\usepackage{amsmath}
+% \usepackage{amsthm}
+\usepackage{algorithmic}
+\usepackage{algorithm}
+\usepackage{setspace}
+%\usepackage[hmargin=2.63cm,vmargin=2.63cm]{geometry}
+%\usepackage[hmargin=2.42cm,vmargin=2.42cm]{geometry}
+\usepackage{url}
+\usepackage{cite}
+
+% \doublespacing
+
+\graphicspath{{./img/}}
+
+\newcommand{\Otime}[1]{\ifmmode {\cal O}(#1) \else ${\cal O}(#1)$\fi}
+
+\begin{document}
+
+% \title{Fast Sparse Grid Interpolation on Heterogeneous Machines}
+% \title{Addressing the Grain Size Problem on Heterogeneous Systems: A Case Study of Sparse Grid Interpolation}
+\title{Evaluation of Optimization Strategies for fastsg on Heterogeneous Systems}
+\author{}
+\institute{}
+
+% \author{Alin Murara\c{s}u \and Andrei Deftu \and Josef Weidendorfer}
+% \institute{Technische Universit\"{a}t M\"{u}nchen, \\
+% \email{\{murarasu,deftu,weidendo\}@in.tum.de}}
+
+\date{}
+
+\maketitle
+
+\begin{abstract}
+In the recent years, the number of processor architectures has grown significantly. Among these architectures, CPUs and GPUs are probably the most popular. Given this heterogeneous landscape, a question touching topics such as programming productivity and performance portability refers to: can we develop optimization strategies that cover both CPUs and accelerators such GPUs? In this paper, by optimization strategy we understand a set of loop transformations and data layout changes. fastsg is a library that provides basic functionality for handling efficiently high-dimensional functions. As it can be employed for compressing and decompressing large-scale simulation data, it is at the core of a computational steering application which serves us as a test case in the paper. We describe our experience, with implementing fastsg's time critical routines for CPUs and GPUs. Our findings show that in spite of the evaluated architectures' being so different, the theory driving the optimizations that we applied to our codes is very similar which led to a simplification of the porting process. With regard to the evaluated application for which achieving high speedups is a ``must'' for real time visualization, we report a speedup of up to ??? times compared with state of the art implementations. 
+\end{abstract}
+
+\input{introduction}
+
+\input{related_work}
+
+\input{cpus_vs_gpus}
+
+\input{loop_transf}
+
+\input{comp_steering}
+
+\input{op_strategies}
+
+\input{evaluation}
+
+\input{lessons}
+
+\input{conclusion}
+
+% \section*{Acknowledgement}
+% This publication is based on work supported by Award No. UK-C0020, made by King Abdullah University of Science and Technology (KAUST).
+
+\bibliographystyle{unsrt}
+\bibliography{refs}
+
+\end{document}

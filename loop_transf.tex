@@ -1,0 +1,119 @@
+\section{Optimizations for Multi-core CPUs}
+\label{sec:optimizations}
+% caches: more cores -> numa -> you need locality for scalability
+% vectorization: wider simd unit on cpus has to harnessed
+% reducing the number of integer operations: a high number of int ops / mem ref can hide locality issues; our objective is to find and eliminate redundant int ops in our algorithms
+% lines of code
+% discussion about compiler vs human optimizations
+% the lessons learned in this work can be of interest to a wider audience: for maximum performance, a programmer shouldn't rely solely on the power of compilers; still compilers are evolving (polyhedral model) and their evolution should be monitored; a set of representive benchmarks should be collected (human versus the compiler); of course the compiler should have access to all information a human has (no aliasing, typical data sizes (loop trip counts) when not obvious, typical data content, etc.); the optimizations we applied to our code were not found by the compilers (gcc and icc) either due to the complexity of the code or to the lack of information; our optimizations include: invariant code motion, loop exchange, loop unroll-and-jam, software pipelining, vectorization; a obvious trend in increasing the ILP of one core comes from widening the vector unit; nehalem - sse, sandy bridge - avx, g80 and gt200 - 8 simd lanes, gf100 - 32 simd lanes, knights ferry - 16 simd lanes (http://www.hpcwire.com/hpcwire/2010-08-05/compilers_and_more_knights_ferry_versus_fermi.html); such simd units cannot be ignored by a performance oriented programmer; the options here are: to rely on the compiler to automatically vectorize or to take vectorization in his or her own hands; it is important here to understand what are the factors that inhibit automatic vectorization; two examples whould be dependence analysis (aliasing, complex subscript expression, etc.) and program semantics (commutative vs non-commutative ops); moreover (cite "a guide to vectorization ...") vectorization is typically achieved by looking on the most inner loop; if the most inner has dependent iterations and the compiler doesn't perform unroll-and-jam to inject independent iterations from one of the outer loops the code cannot be vectorized; moreover the layout of the data does not favor vectorization (see sparse grid interpolation), it is unlikely that the compiler would fix that; the bottom line is that a corrent methology would be: (1) read the vectorizer report and the vectorization inhibitors, (2) eliminate the inhibitors using program transformations or compiler hints, (3) check report and if vectorization still not possible perform manual vectorization using techniques such as: loop unroll or loop unroll-and-jam, software pipelining; there are many options for manual vectorization: intrinsics sse and avx, vector types in opencl, array notations since icc v12, library approaches such a intel arbb; intrinsics offers the most flexibility but: changing to float to double, 32 bit int to 64 bit int requires code transformations (different intrinsics); moreover simd instructions are continously evolving: sse1, sse2, sse3, sse4, avx (each phase can generate a rethinking of the code, not future proof); for integer in particular: no div, no mod, 4 int x 4 int = 2 x 64 bit int, no int in avx; the solution comes from higher level abstractions; opencl seems the most promising since it is a standard but it is also a new programming model; array notations are promissing since allow for a more clear transformation of the code by simply promoting scalar variables to vector types (but it is supported only by the intel compiler); intel arbb is another promising candidate, this time a library solution not bound to a given compiler? 
+
+Most optimizations applied to numerical codes focus on loops since these are the places where most of the execution time is spent. In general, we expect the compiler to handle loop transformations. An overview of loop transformations performed by the compiler is presented in \cite{bacon1994}. We cover in our paper only a subset of those optimizations relevant for our discussion and our routines. Specifically, we focus on optimizations that exploit the deep memory hierarchy of modern CPUs, that make use of the instruction parallelism provided by the hardware, and those that decrease the number of instructions executed.
+
+A developer that aims at obtaining maximum performance from an architecture should not rely solely on the compiler for optimizations. In defense of this statement, we refer to the loop tiling transformation. Loop tiling is a loop reordering transformation primarily used to improve cache reuse. In loop tiling, the iteration space is divided in tiles. The transformation is highly dependent on the memory hierarchy. Aggressive tiling is done for all the levels of memory, including registers, Level-1 cache, Level-2 cache, etc. The complexity of caches complicates compiler's task to produce efficient loop tiling transformations. This is actually what motivates the existence of auto-tuners that aim to better match tile sizes with the memory levels. In the same category of loop transformations that enhance locality, there is also loop interchange. This is a transformation that exchanges the position of two loops so that the access to memory is improved, i.e. fewer cache and TLB misses. Sometimes, because the number of iterations of a loop is not known at compile time, the compiler cannot determine the best permutation of loops. Complex data dependencies resulting from complex array subscripts can also limit the applicability of this optimization since the compiler needs to prove that a given optimization preserves the semantics of the unoptimized code. This is actually a general rule followed by all compiler transformations.
+
+Among the loop restructuring transformations that increase the instruction parallelism we find loop unrolling, loop unroll-and-jam, and software pipelining. Loop unrolling replicates the body of a loop a number of times referred to as the unrolling factor. This optimization also reduces the loop overhead and can improve the register, cache, and TLB locality. Another advantage is that more possibilities for reordering instructions are available, thus resulting in a better utilization of the instruction pipeline. The main disadvantage comes from increased size of the compiler generated code which puts more pressure on the instruction cache. Loop unroll-and-jam is similar to unroll in the sense that it copies the body of one of the next inner loops some number of times equal to the unroll-and-jam factor. The generated inner loops are then fused together (or jammed). This transformation can lead to more independent instructions in the inner loop. Software pipelining implies reordering instructions from different iterations of a loop such that independent instructions are executed in sequence. This transformation is often used in combination with loop unrolling.
+
+In the recent period, vectorization has been gaining increased attention from developers. The current generation of processors from Intel, Sandy Bridge, contains 8-lane SIMD units (AVX), providing two times more throughput than the previous 4-lane SIMD units (SSE). Developers are interested to make use of the potential 8-fold speedup. In theory this can be achieved through vectorization performed by compilers. However, there are several factors that limit compilers' ability to vectorize a loop. As with other optimizations performed by compilers, it is important for compilers to get a correct view of data dependencies before deciding to vectorize a loop. Using pointers can create aliasing problems which reduce compilers' ability to perform data dependence analysis. Hence it can drastically limit the potential for optimizations, including vectorization. Moreover, complex expressions used as array subscripts further complicate the data dependence analysis. In general, vectorization also requires stride-1 accesses to memory in order to be efficient. As another important point, we mention that vectorization is built on top of other loop transformations. Sometimes the compiler does not reorder the loops and this does not allow for the innermost loop to be vectorized. 
+% This can happen in the case of conflicting optimizations, for instance when loop reordering leads to a worse cache exploitation despite of an exploitation of the vector units. 
+We do not provide here a detailed description of vectorization. Instead, we simply want to emphasize that it is an important optimization nowadays. Similar to the optimizations that target caches, human intervention is sometimes required to cope with the vectorization inhibitors. We refer the reader to \cite{vec_guide} for a complete vectorization guide for \textit{icc}. 
+% A detailed guide for vectorization using \textit{icc} is available in \cite{vec_guide}.
+
+Another important loop transformation is loop invariant code motion. This is a data-flow based loop transformation that moves outside a loop the computation whose result does not modify between iterations. 
+% In such a case, the computation can be moved outside the loop, thus decreasing the number of instructions executed.
+The obvious consequence is that the number of instructions executed decreases. 
+We show in the following that for complex codes, it is difficult for the compiler to identify loop invariant computations. Therefore, it is essential for performance that the programmer is aware of this transformation and can apply it to the code whenever necessary. 
+
+% It is difficult to define a clear boundary between human and compiler transformations. Probably the best methodology is to override or complement compiler produced optimizations only when it fails to apply the best code transformations. This can be achieved for instance via optimization reports generated by compilers. If these reports are not available, an advanced programmer can always check the asembly code resulting from compilation. Although this is the best practice, a trial-and-error approach can be in some situations the most productive, offering a better tradeoff between the performance achieved by the code and the time invested in optimizing it.
+
+% It is difficult to define a clear boundary between human and compiler transformations. Building a library further complicates the process of optimizing a code. Indeed sometimes we have to take control over optimizations.
+
+It is difficult to define a clear boundary between human and compiler produced transformations. It is often necessary for the programmer to complement or override compiler produced optimizations in order to improve the performance. But discovering missing or inefficient transformations performed by the compiler is often a tedious task. Optimization reports  generated by compilers or assembly annotated source codes help in this sense. Building a library further complicates the process of optimizing a code. 
+% We can refer to this as human - compiler software codesign. 
+In a library, we need to reason about the influence on performance of different values for the input parameters. Typically, it is difficult for a compiler to achieve this. A human on the other hand can address the situation by building decision trees which lead to different optimizations depending on the values of the inputs.
+
+With these ideas in mind, we now look at three situations in which we illustrate inhibitors for compiler optimizations. To increase the performance, these inhibitors have to be addressed by the programmer. Note that the computation and memory access patterns from these examples are similar to the patterns from \textit{fastsg}'s routines.
+
+\floatname{algorithm}{Example}
+\setcounter{algorithm}{0}
+
+\begin{figure}[tbp]
+\begin{minipage}[t]{\textwidth}%
+\vspace{0cm}%
+\begin{minipage}[c]{0.32\textwidth}%
+\vspace{0cm}%
+\begin{center}
+\begin{algorithm}[H]
+\small{
+%\caption{Loop example 1.}
+ \caption{}
+ \label{alg:example1}                       
+ \begin{algorithmic}[1]
+    \FOR{$i=1$ to $m$}
+		\FOR{$j=1$ to $n$}
+			\STATE $a[i] \leftarrow \text{op}(a[i], b[j], c[j])$
+		\ENDFOR
+    \ENDFOR
+ \end{algorithmic}
+}
+\end{algorithm}
+\end{center}
+\end{minipage}%
+\hfill
+\begin{minipage}[c]{0.32\textwidth}%
+\vspace{0cm}%
+\begin{center}
+\begin{algorithm}[H]
+\small{
+% \caption{Loop example 2, a specialization of Alg.~\ref{alg:example1}.}
+ \caption{A specialization of Ex.~\ref{alg:example1}.}
+ \label{alg:example2}                       
+ \begin{algorithmic}[1]
+    \FOR{$i=1$ to $m$}
+		\FOR{$j=1$ to $n$}
+			\STATE $a[i] \leftarrow a[i] \cdot b[j] + c[j]$
+		\ENDFOR
+    \ENDFOR
+ \end{algorithmic}
+}
+\end{algorithm}
+\end{center}
+\end{minipage}%
+\hfill
+\begin{minipage}[c]{0.32\textwidth}%
+\vspace{0cm}%
+\begin{center}
+\begin{algorithm}[H]
+\small{
+% \caption{Loop example 3.}
+ \caption{}
+ \label{alg:example3}                       
+ \begin{algorithmic}[1]
+    \FOR{$i=1$ to $m$}
+		\FOR{$j=1$ to $n$}
+			\FOR{$k=1$ to $p$}
+				\STATE $a[i] \leftarrow a[i] \cdot b[j][k] + c[i][k]$
+				\STATE $d[i] \leftarrow d[i] \cdot e[i][k] + f[j][k]$
+			\ENDFOR
+		\ENDFOR
+    \ENDFOR
+ \end{algorithmic}
+}
+\end{algorithm}
+\end{center}
+\end{minipage}%
+\end{minipage}%
+\end{figure}
+
+\setcounter{algorithm}{1}
+\floatname{algorithm}{Algorithm}
+
+In Ex.~\ref{alg:example1} we can see a nest of two loops. We discuss in this context about loop interchange. For best cache exploitation, we want to have as the innermost loop the loop with fewer iterations since the number of iterations are in direct connection with the size of the arrays. Let $m$ and $n$ be bigger than the size of the cache. Since $m$ and $n$ are not known at compile time, we have to consider two situations: $m \gg n$ and $m \ll n$. In the first case, we can leave the nest in the original form. In the second one, for optimal cache usage, the loops have to be permuted, i.e. the $j$ loop is placed before the $i$ loop. This example shows that the input parameters, $m$ and $n$, influence the optimizations. A simple decision tree is built for representing input dependent optimizations. 
+% Note that we do not consider in our discussion scenarios in which the computation depends on the actual content of the data.
+
+In Ex.~\ref{alg:example2} we use the same reasoning based on the values of $m$ and $n$. If $m \gg n$, the loops do not swap places. In the current form, the innermost loop cannot be vectorized. To vectorize this loop, we perform loop tiling on the $i$ loop which is equivalent to creating two loops: $\textit{i1}$ that loops over the tiles and $\textit{i2}$ that loops inside a tile. By interchanging the $\textit{i2}$ and $j$ loops, the $\textit{i2}$ loop becomes the innermost loop, and after unrolling it using a factor of 4 for SSE (or 8 for AVX) can be easily vectorized. In the second case,  $m \ll n$, interchanging the $i$ and $j$ loops results in correct exploitation of both caches and vector units. 
+
+Ex.~\ref{alg:example2} has \Otime{m \cdot n} complexity. In this particular example we can reduce the complexity to \Otime{m + n}. Let us observe first that for $a[i]$ we have the formula $a[i] = a[i] \cdot u + v$, where $u := \prod_{j=1}^n b[j]$ and $v := \sum_{j=1}^{n-1} ( c[j] \cdot \prod_{k=j+1}^n b[k]) + c[n]$. This means that $u$ and $v$ can be computed in the $j$ loop whereas computing $a[i]$ can be placed immediately after the $j$ loop. Note that the formulas for $u$ and $v$ contain no $i$, meaning the $j$ loop is now invariant relative to the $i$ loop, i.e. we can move it before the $i$ loop resulting in \Otime{m + n}. Experiments performed with \textit{gcc} and \textit{icc} show that these compilers cannot reduce the complexity to \Otime{m + n} even when the values for $m$ and $n$ are constant. We emphasize once more that in our scenario $m$ and $n$ are not known at compile time and in general we do not expect the compiler to manage efficiently such situations.
+
+In Ex.~\ref{alg:example3} we consider the scenario where $n \gg m \gg p$. In response to the relation between the number of iterations of the loops, we permute the loops from $(i,j,k)$ to $(j,i,k)$ to improve locality. But, in this configuration, the innermost loop, $k$, cannot be vectorized due to data dependencies. We can apply the same method as for Ex.~\ref{alg:example2}. We perform loop tiling on the $i$ loop, thus obtaining the loops $\textit{i1}$ and $\textit{i2}$. We then move the $\textit{i2}$ loop after the $k$ loop. Since we know that $a[i]$ and $d[i]$ are independent, we can perform loop unrolling and software pipelining on the $\textit{i2}$ loop to expose the data parallelism necessary for vectorization. The last challenge comes from the data access which for the matrices $c$ and $e$ is not stride-1. This is an inhibitor for vectorization. It requires a change in the data layout for $c$ and this is again difficult to achieve only by the compiler. Therefore, the programmer needs to transform $c$ to $\tilde{c}$ according to $c[i][k] \rightarrow \tilde{c}[(i/\textit{m2}) \cdot p + k][i \bmod \textit{m2}]$, where $\textit{m2}$ is the number of iterations of the $\textit{i2}$ loop or the tile size. The same discussion applies also to matrix $e$. The access to $\tilde{c}$ and $\tilde{e}$ is now stride-1 and the innermost loop can be vectorized. Let us look again at the issues addressed in this example: unknown number of iterations and vectorization unfriendly data layout. Note that vectorization can also be achieved through unroll-and-jam applied to the initial loop $i$ after the permutation. Nevertheless, these are solutions difficult to implement by a compiler.
+
+With this introduction in human - compiler collaborative tuning, we move to the next part of the paper that describes the strategy taken for optimizing \textit{fastsg}'s routines. 
