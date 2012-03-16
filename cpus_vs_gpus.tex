@@ -17,18 +17,22 @@ CPUs but only a subset can be ported to or deliver good performance on GPUs,
 making them special purpose processors. In the following, we refer to GPUs and
 CPUs as processors, but of different type.
 
-% Given their specific architectural characteristics, programming the CPU and the GPU is inherently different. 
-Programming the CPU and the GPU is inherently different. Multi-core CPUs are
-programmed using threads through pthreads or OpenMP. For GPU programming, CUDA
-is also based on threads, but there are differences. For synchronization, CUDA
-only provides barriers within thread groups running on the same GPU core, and
-atomic operations. For performance, the architectural details of GPUs have to be
-considered. Maximizing the number of threads running concurrently on the GPU,
-coalescing accesses to global memory, eliminating bank conflicts, minimizing the
-number of branches, and utilizing the various memories appropriately (global,
-shared, texture, constant) are important GPU optimizations.
-% In contrast, CPU optimizations include blocking at different memory levels and arranging and aligning data for SSE / AVX operations.
-In contrast, CPU optimizations include cache blocking and vectorization.
+Given their specific architectural characteristics, programming the CPU and the
+GPU is inherently different. Multi-core CPUs are programmed using operating
+system threads. For GPU programming, CUDA is also based on threads, but there
+are differences. For synchronization, CUDA only provides barriers within thread
+groups running on the same GPU core, and atomic operations. For performance, the
+architectural details of GPUs have to be considered. Maximizing the number of
+threads running concurrently on the GPU, coalescing accesses to global memory,
+eliminating bank conflicts, minimizing the number of branches, and utilizing the
+various memories appropriately (global, shared, texture, constant) are important
+GPU optimizations. In contrast, common CPU optimizations include cache blocking
+and vectorization.
+% In contrast, CPU optimizations include blocking at different memory levels and
+% arranging and aligning data for SSE / AVX operations.
+
+We will describe in the following subsections the current GPU architectures
+using CUDA terms and provide some brief guidelines for programming Nvidia cards.
 
 \subsection{GPU Architecture}
 
@@ -71,16 +75,16 @@ controlled explicitly by the programmer.
 
 \subsection{GPU Programming}
 
-The Compute Unified Device Architecture (CUDA) is one of the available
-frameworks for programming Nvidia GPUs. From a programming point of view, a CUDA
-application has a CPU and a GPU part. The main responsibilities of the CPU part
-are: allocating memory  on the GPU, transferring data to and from the GPU over
-PCI Express and launching the GPU program called kernel. A kernel cannot contain
-recursive functions. Each instance of a kernel in execution is a thread. Besides
-being packed in warps, the threads are also grouped in blocks of threads. This
-grouping is important as only the threads inside a block can synchronize via
-barriers (\emph{\_\_syncthreads}) and share data from the shared memory. Each
-thread has a 2d block identifier (\emph{blockIdx}) and a 3d thread identifier
+CUDA is one of the available frameworks for programming Nvidia GPUs. From a
+programming point of view, a CUDA application has a CPU and a GPU part. The main
+responsibilities of the CPU part are: allocating memory  on the GPU,
+transferring data to and from the GPU over PCI Express and launching the GPU
+program called kernel. A kernel cannot contain recursive functions. Each
+instance of a kernel is executed by a thread. Besides being packed in warps, the
+threads are also grouped in blocks of threads. This grouping is important as
+only the threads inside a block can synchronize via barriers
+(\emph{\_\_syncthreads}) and share data from the shared memory. Each thread has
+a 2d block identifier (\emph{blockIdx}) and a 3d thread identifier
 (\emph{threadIdx}). Combining the block and the thread identifiers offers the
 means to uniquely identify a thread on the GPU and to assign its part from the
 workload to be computed on the GPU.
@@ -100,12 +104,24 @@ they represent only a subset of the optimizations applicable to CUDA
 applications. For a detailed list of optimizations we refer the reader to
 \cite{cuda}.
 
-% The number of active threads is not the same for all applications. An optimization direction for GPU programs consists in maximizing the number of active threads. This is typically achievable by reducing the register and shared memory consumption per thread.
+% The number of active threads is not the same for all applications. An
+% optimization direction for GPU programs consists in maximizing the number of
+% active threads. This is typically achievable by reducing the register and
+% shared memory consumption per thread.
 
-% Nvidia GPUs have a Single Instruction Multiple Thread (SIMT) architecture. The SM's control unit creates, manages and executes synchronously the threads in groups of 32 called warps. Every instruction is broadcast synchronously to all the active threads in a warp. In this context, divergence caused by branches may serialize the execution of the threads composing a warp. To improve the performance, the number of divergent branches needs to be minimized. 
+% Nvidia GPUs have a Single Instruction Multiple Thread (SIMT) architecture. The
+% SM's control unit creates, manages and executes synchronously the threads in
+% groups of 32 called warps. Every instruction is broadcast synchronously to all
+% the active threads in a warp. In this context, divergence caused by branches
+% may serialize the execution of the threads composing a warp. To improve the
+% performance, the number of divergent branches needs to be minimized.
 
-% GPUs have multiple fast memories on the chip: constant cache, texture cache and shared memory\cite{ryo2008}. Exploiting the memory hierarchy properly is another direction for optimizing CUDA programs.
+% GPUs have multiple fast memories on the chip: constant cache, texture cache
+% and shared memory\cite{ryo2008}. Exploiting the memory hierarchy properly is
+% another direction for optimizing CUDA programs.
 
-% GPUs have their own dedicated memory which is in the order of several Gigabytes, e.g. Tesla has 4 GB of memory. Minimizing the memory consumption is also an optimization that should be considered by a CUDA developer.
+% GPUs have their own dedicated memory which is in the order of several
+% Gigabytes, e.g. Tesla has 4 GB of memory. Minimizing the memory consumption is
+% also an optimization that should be considered by a CUDA developer.
 
 % Recursive function are not allowed on GPUs\cite{cuda}. 

@@ -14,12 +14,13 @@ A simple abstraction for GPUs is to consider them many-core architectures, with
 a large number of cores and with each core including a large vector units
 allowing to compute up to 32 flops per cycle (64 flops for FMAD). This view of
 GPUs is not immediately visible in the programming manuals released by GPU
-vendors. CUDA is an option for programming Nvidia GPUs. The vector units are not
-directly visible in CUDA. Indirectly, the SIMD nature of GPUs reveals itself
-when applying various optimizations, e.g. for bank conflicts and memory access
-coalescing. This view of GPUs as vector processors is at the foundation of
-Volkov's paper on optimizing matrix multiplication \cite{volkov2008}. His tuning
-strategy was afterwards included in the cublas library from Nvidia.
+vendors. Compute Unified Device Architecture (CUDA) is an option for programming
+Nvidia GPUs. The vector units are not directly visible in CUDA. Indirectly, the
+SIMD nature of GPUs reveals itself when applying various optimizations, e.g. for
+bank conflicts and memory access coalescing. This view of GPUs as vector
+processors is at the foundation of Volkov's paper on optimizing matrix
+multiplication \cite{volkov2008}. His tuning strategy was afterwards included in
+the cublas library from Nvidia.
 
 % CUDA can be misleading when referring to the architecture. Of course, a
 % trade-off should be clarified at this point. It does what it does to simplify
