@@ -16,10 +16,10 @@ allowing to compute up to 32 flops per cycle (64 flops for FMAD). This view of
 GPUs is not immediately visible in the programming manuals released by GPU
 vendors. CUDA is an option for programming Nvidia GPUs. The vector units are not
 directly visible in CUDA. Indirectly, the SIMD nature of GPUs reveals itself
-when applying optimizations for bank conflicts and memory access coalescing (see
-CUDA manual for more details). Seeing the GPUs as vector processors is at the
-foundation of Volkov's paper from SC 2008 on optimizing matrix multiplication.
-His tuning strategy was afterwards included in the cublas library from Nvidia.
+when applying various optimizations, e.g. for bank conflicts and memory access
+coalescing. This view of GPUs as vector processors is at the foundation of
+Volkov's paper on optimizing matrix multiplication \cite{volkov2008}. His tuning
+strategy was afterwards included in the cublas library from Nvidia.
 
 % CUDA can be misleading when referring to the architecture. Of course, a
 % trade-off should be clarified at this point. It does what it does to simplify
@@ -37,21 +37,22 @@ His tuning strategy was afterwards included in the cublas library from Nvidia.
 % in blocks and a block is executed on an SM. Communication among threads is
 % allowed only within a block.
 
-When reasoning about code transformations that improve performance on a wide
+But when reasoning about code transformations that improve performance on a wide
 range of architectures, we do not want to lose ourselves in the details of the
-programming models. We need the real view of the hardware not a simplified view.
-Ideally, what we want is to develop high-level code transformations for which it
-can be decided at design time performance improvement they give on a given
-architecture, i.e. CPUs or GPUs. We do not expect that the sequence of
-transformations remains the same. To simplify the porting of applications from
-one architecture to another, it is essential to determine the common / different
-points of the architectures and map the optimizations accordingly. As an
-example, CPUs and GPUs have vector units and AOS to SOA is a transformation that
-often is required by both. Given the converge of CPUs and GPUs seen in CPUs that
-have doubled the width of the SIMD units (Intel Sandy Bridge has 2x the bits of
-Intel Nehalem, 128 bits) and GPUs that received 2 level, coherent caches, we
-expect that more transformations, e.g. for locality, to be shared between codes
-for CPUs and GPUs.
+programming models. Furthermore, we need the real view of the hardware not a
+simplified view. Ideally, what we want is to develop high-level code
+transformations for which it can be decided at design time the performance
+improvement they give on a given architecture, i.e. CPUs or GPUs. We do not
+expect that the sequence of transformations remains the same. To simplify the
+porting of applications from one architecture to another, it is essential to
+determine the common and different aspects of the architectures and map the
+optimizations accordingly. As an example, CPUs and GPUs have vector units and
+Array-Of-Structures (AOS) to Structure-Of-Arrays (SOA) is a transformation that
+often is required by both. Given the convergence of CPUs and GPUs seen in CPUs
+that have doubled the width of the SIMD units (Intel Sandy Bridge has 2x the
+bits of Intel Nehalem, 128 bits) and GPUs that received 2 level, coherent
+caches, we expect that more transformations, e.g. for locality, to be shared
+between codes for CPUs and GPUs.
 
 To test these concepts, we consider a computational steering application. The
 main goal in this application is to allow for a smooth, real-time interaction
@@ -68,8 +69,8 @@ developments in hardware. But starting from scratch with every hardware release
 is far from being a productive approach. Instead, what we followed was to
 develop optimizations for loops and data layout at the same level at which we
 develop algorithms. We realized that many of the transformations we are applying
-are valid for both CPUs and GPUs, considering the above view of GPUs as a vector
-processors. The main contributions of our paper are as follows:
+are valid for both CPUs and GPUs, considering the above mentioned view of GPUs
+as a vector processors. The main contributions of our paper are as follows:
 
 \begin{itemize}
   \item We port dimensionally adaptive sparse grids algorithms on GPUs and
