@@ -1,33 +1,104 @@
 \section{CPUs versus GPUs}
-Heterogeneous systems containing CPUs and accelerators allow us to reach higher computational speeds while keeping power consumption at acceptable levels. The most common accelerators nowadays, GPUs, are very different compared to state-of-the-art general-purpose CPUs. While CPUs incorporate large caches and complex logic for out-of-order execution, branch prediction, and speculation, GPUs contain significantly more floating point units. They have in-order cores which hide pipeline stalls through interleaved multithreading, e.g. allowing up to 1536 concurrent threads per core\footnote{In Nvidia terminology a core is called Streaming Multi-Processor.}.
-Garland et al.~\cite{garland2010} refer to CPUs as latency oriented processors with complex techniques used for extracting Instruction Level Parallelism (ILP) from sequential programs. In contrast, GPUs are throughput oriented, containing a large number of cores (e.g. 16) with wide SIMD units (e.g. 32 lanes), making them ideal architectures for vectorizable codes. All applications can be run on CPUs but only a subset can be ported to or deliver good performance on GPUs, making them special purpose processors. In the following, we refer to GPUs and CPUs as processors, but of different type.
+Heterogeneous systems containing CPUs and accelerators allow us to reach higher
+computational speeds while keeping power consumption at acceptable levels. The
+most common accelerators nowadays, GPUs, are very different compared to
+state-of-the-art general-purpose CPUs. While CPUs incorporate large caches and
+complex logic for out-of-order execution, branch prediction, and speculation,
+GPUs contain significantly more floating point units. They have in-order cores
+which hide pipeline stalls through interleaved multithreading, e.g. allowing up
+to 1536 concurrent threads per core\footnote{In Nvidia terminology a core is
+called Streaming Multi-Processor.}.
+Garland et al.~\cite{garland2010} refer to CPUs as latency oriented processors
+with complex techniques used for extracting Instruction Level Parallelism (ILP)
+from sequential programs. In contrast, GPUs are throughput oriented, containing
+a large number of cores (e.g. 16) with wide SIMD units (e.g. 32 lanes), making
+them ideal architectures for vectorizable codes. All applications can be run on
+CPUs but only a subset can be ported to or deliver good performance on GPUs,
+making them special purpose processors. In the following, we refer to GPUs and
+CPUs as processors, but of different type.
 
 % Given their specific architectural characteristics, programming the CPU and the GPU is inherently different. 
-Programming the CPU and the GPU is inherently different. 
-Multi-core CPUs are programmed using threads through pthreads or OpenMP.
-For GPU programming, CUDA is also based on threads,
-but there are differences. For synchronization,
-CUDA only provides barriers within thread groups running on the same GPU core, and atomic operations. For performance, the architectural details of GPUs have to be considered.
-Maximizing the number of threads running concurrently on the GPU, coalescing accesses to global memory, eliminating bank conflicts, minimizing the number of branches, and utilizing the various memories appropriately (global, shared, texture, constant) are important GPU optimizations.
+Programming the CPU and the GPU is inherently different. Multi-core CPUs are
+programmed using threads through pthreads or OpenMP. For GPU programming, CUDA
+is also based on threads, but there are differences. For synchronization, CUDA
+only provides barriers within thread groups running on the same GPU core, and
+atomic operations. For performance, the architectural details of GPUs have to be
+considered. Maximizing the number of threads running concurrently on the GPU,
+coalescing accesses to global memory, eliminating bank conflicts, minimizing the
+number of branches, and utilizing the various memories appropriately (global,
+shared, texture, constant) are important GPU optimizations.
 % In contrast, CPU optimizations include blocking at different memory levels and arranging and aligning data for SSE / AVX operations.
 In contrast, CPU optimizations include cache blocking and vectorization.
 
 \subsection{GPU Architecture}
 
-In contrast to CPUs which use the die space for complex control logic and large caches, GPUs devote a higher percentage of transistors to floating point units. GPUs provide massive parallelism and deliver better performance than CPUs especially for applications with regular access patterns, e.g. dense matrix operations \cite{vol2008}.
+In contrast to CPUs which use the die space for complex control logic and large
+caches, GPUs devote a higher percentage of transistors to floating point units.
+GPUs provide massive parallelism and deliver better performance than CPUs
+especially for applications with regular access patterns, e.g. dense matrix
+operations \cite{vol2008}.
 
-In the following we focus on the C1060 model of Nvidia Tesla \cite{lin2008}. This is a high-end GPU which contains 30 8-way SIMD units called by Nvidia Streaming Multiprocessors (SM). In Nvidia terminology, each way is called a Scalar Processor (SP). C1060 supports up to 1024 thread contexts in hardware per SM \cite{cuda}. Each thread is generally executed on one of the 8 ways of the SIMD unit. One of the main characteristics of Nvidia GPUs is multithreading which offers the possibility to hide the latency originating from various instructions, especially the latency caused by loads from and stores to RAM, by executing a large number of threads (up to 30720 on a Tesla) concurrently with a low cost per context switch.
+In the following we focus on the GeForce GTX 480 model of Nvidia Fermi.
+This is a high-end GPU which contains 15 32-way SIMD units called by Nvidia
+Streaming Multiprocessors (SM). In Nvidia terminology, each way is called a
+Scalar Processor (SP). Each thread is generally executed on one of the 32 ways
+of the SIMD unit. One of the main characteristics of Nvidia GPUs is multithreading
+which offers the possibility to hide the latency originating from various
+instructions, especially the latency caused by loads from and stores to RAM, by
+executing a large number of threads concurrently with a low cost per context
+switch.
 
-Nvidia GPUs are SIMD based architectures. Each SM control unit creates, manages and executes synchronously the threads in groups of 32 called warps. Every instruction is broadcasted synchronously to all the active threads in a warp. Branching may cause threads in the same warp to follow different execution paths. This type of behavior of the threads inside a warp is called diverge. It has the potential to severely reduce the performance of a GPU application, up to a factor of 32.
+Nvidia GPUs are SIMD based architectures. Each SM control unit creates, manages
+and executes synchronously the threads in groups of 32 called warps. Every
+instruction is broadcasted synchronously to all the active threads in a warp.
+Branching may cause threads in the same warp to follow different execution
+paths. This type of behavior of the threads inside a warp is called diverge. It
+has the potential to severely reduce the performance of a GPU application, up to
+a factor of 32.
 
-GPUs have their own dedicated RAM, global memory, which is in the order of several Gigabytes, e.g. C1060 has 4 GB of DDR3 memory. For performance, GPUs are also equipped with multiple fast memories on the chip: constant cache, texture cache and shared memory \cite{ryo2008}. The properties of these fast memories vary in terms of latency, bandwidth and usage. The constant cache is a read-only cache and, according to \cite{won2010}, its level-1 has the lowest latency among the memories on the GPU. The texture cache is a read-only memory used for optimizing the bandwidth rather than latency, i.e. its latency is comparable with the one of the global memory. Finally, the shared memory is a low latency, read-write memory, is private per SM and controlled explicitly by the programmer.
+GPUs have their own dedicated RAM, global memory, which is in the order of
+several Gigabytes, e.g. GeForce GTX 480 has 1.5 GB of DDR3 memory. For
+performance, GPUs are also equipped with multiple fast memories on the chip:
+constant cache, texture cache and shared memory \cite{ryo2008}. The properties
+of these fast memories vary in terms of latency, bandwidth and usage. The
+constant cache is a read-only cache and, according to \cite{won2010}, its
+level-1 has the lowest latency among the memories on the GPU. The texture cache
+is a read-only memory used for optimizing the bandwidth rather than latency,
+i.e. its latency is comparable with the one of the global memory. Finally, the
+shared memory is a low latency, read-write memory, is private per SM and
+controlled explicitly by the programmer.
 
 
 \subsection{GPU Programming}
 
-The Compute Unified Device Architecture (CUDA) is one of the available frameworks for programming Nvidia GPUs. From a programming point of view, a CUDA application has a CPU and a GPU part. The main responsibilities of the CPU part are: allocating memory  on the GPU, transferring data to and from the GPU over PCI Express and launching the GPU program called kernel. A kernel cannot contain recursive functions. Each instance of a kernel in execution is a thread. Besides being packed in warps, the threads are also grouped in blocks of threads. This grouping is important as only the threads inside a block can synchronize via barriers (\emph{\_\_syncthreads}) and share data from the shared memory. Each thread has a 2d block identifier (\emph{blockIdx}) and a 3d thread identifier (\emph{threadIdx}). Combining the block and the thread identifiers offers the means to uniquely identify a thread on the GPU and to assign its part from the workload to be computed on the GPU.
+The Compute Unified Device Architecture (CUDA) is one of the available
+frameworks for programming Nvidia GPUs. From a programming point of view, a CUDA
+application has a CPU and a GPU part. The main responsibilities of the CPU part
+are: allocating memory  on the GPU, transferring data to and from the GPU over
+PCI Express and launching the GPU program called kernel. A kernel cannot contain
+recursive functions. Each instance of a kernel in execution is a thread. Besides
+being packed in warps, the threads are also grouped in blocks of threads. This
+grouping is important as only the threads inside a block can synchronize via
+barriers (\emph{\_\_syncthreads}) and share data from the shared memory. Each
+thread has a 2d block identifier (\emph{blockIdx}) and a 3d thread identifier
+(\emph{threadIdx}). Combining the block and the thread identifiers offers the
+means to uniquely identify a thread on the GPU and to assign its part from the
+workload to be computed on the GPU.
 
-A first optimization for GPU programs consists of the proper exploitation of multithreading. This is equivalent to maximizing the number of active threads and can be achieved by reducing the register file and shared memory consumption per thread. Second, efficient use of the memory hierarchy can provide a substantial speedup to GPU applications. This optimization includes at least: enabling coalesced accesses to global memory in order to reduce the number of memory transactions, using the fast memories on-chip and reducing the number of bank conflicts caused by accessing the shared memory. Third, divergent branches can serialize the execution of the threads composing a warp. To improve the performance, the number of divergent branches needs to be minimized. Note that these are the optimizations which proved to be relevant to our application and they represent only a subset of the optimizations applicable to CUDA applications. For a detailed list of optimizations we refer the reader to \cite{cuda}.
+A first optimization for GPU programs consists of the proper exploitation of
+multithreading. This is equivalent to maximizing the number of active threads
+and can be achieved by reducing the register file and shared memory consumption
+per thread. Second, efficient use of the memory hierarchy can provide a
+substantial speedup to GPU applications. This optimization includes at least:
+enabling coalesced accesses to global memory in order to reduce the number of
+memory transactions, using the fast memories on-chip and reducing the number of
+bank conflicts caused by accessing the shared memory. Third, divergent branches
+can serialize the execution of the threads composing a warp. To improve the
+performance, the number of divergent branches needs to be minimized. Note that
+these are the optimizations which proved to be relevant to our application and
+they represent only a subset of the optimizations applicable to CUDA
+applications. For a detailed list of optimizations we refer the reader to
+\cite{cuda}.
 
 % The number of active threads is not the same for all applications. An optimization direction for GPU programs consists in maximizing the number of active threads. This is typically achievable by reducing the register and shared memory consumption per thread.
 
