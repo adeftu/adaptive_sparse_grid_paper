@@ -1,84 +1,265 @@
 \section{Optimization Strategies}
 
-There are three main routines that are the hotspots of our library with regard to performance: \textit{init}, \textit{hierarchize}, and \textit{evaluate}. Since \textit{init} can be seen as a subpart of \textit{hierarchize}, we focus only on the last two. The optimizations applied to \textit{init} are the same as for \textit{hierarchize}. Note that it is difficult to measure the impact of the optimizations on \textit{init} since it depends on the $f$ function provided by the user of the library. Depending on the application, this can be a simple or a complex high-dimensional function, potentially executing in a significant amount of time. 
+% There are three main routines that are the hotspots of our library with regard
+% to performance: \textit{init}, \textit{hierarchize}, and \textit{evaluate}.
+% Since \textit{init} can be seen as a subpart of \textit{hierarchize}, we focus
+% only on the last two. The optimizations applied to \textit{init} are the same as
+% for \textit{hierarchize}. Note that it is difficult to measure the impact of the
+% optimizations on \textit{init} since it depends on the $f$ function provided by
+% the user of the library. Depending on the application, this can be a simple or a
+% complex high-dimensional function, potentially executing in a significant amount
+% of time.
+% 
+% We do not concentrate on the theory behind these routines. For the detailed
+% theory we refer the reader to \cite{bungartz2004}. A summary is available in
+% \cite{murarasu2011}. We describe instead the data dependencies that narrow the
+% set of transformations that can be applied to the code. The dependencies also
+% help to explain the performance of our library.
 
-We do not concentrate on the theory behind these routines. For the detailed theory we refer the reader to \cite{bungartz2004}. A summary is available in \cite{murarasu2011}. We describe instead the data dependencies that narrow the set of transformations that can be applied to the code. The dependencies also help to explain the performance of our library.
+The computational core of \textit{fastsg} resides in \textit{hierarchize}, and
+\textit{evaluate} routines as presented in \cite{}. We will not enter here into
+the details of these procedures here because a summary is already available in
+\cite{murarasu2011}. Instead, we present a set of optimizations for both of them
+in the context of GPUs. We grouped these optimizations into 3 categories based
+on their end purpose: memory locality, vectorization, and operations with
+integers.
+
+We start with a basic version of hierarchization algorithm in which each warp
+on the GPU computes the coefficients for one subspace of the sparse grid for a
+better cache locality and in order to reduce the thread divergence within warps.
+Because the coefficients for one subspace are stored contiguously in memory, we
+also want for these values to be accessed simultaneously. Therefore, each thread
+within a warp starts reading at index equal to its lane index and then every
+element found at a distance multiple of 32 (the number of threads within a
+warp). In this way, a warp will access the memory contiguously for each read
+instruction.
+
+TODO.
 
 \begin{algorithm}[tbp]
 \small{
- \caption{Hierarchization.}
- \label{alg:hierarchization}                       
+ \caption{Hierarchization kernel.}
+ \label{alg:hierarchization_kernel}                       
  \begin{algorithmic}[1]
-    \FOR{$t=1$ to $d$}
-		\STATE $j \leftarrow \text{size()}$
-		\FOR{$g=n$ downto $1$}
-			\FOR{$b=a(d, g)$ downto $1$}
-				\FOR{$k=2^g$ downto $1$}
-					\STATE $\boxed{(l, i) \leftarrow \text{idx2agp}(j)}$
-					\STATE $(\textit{ll}, \textit{il}) \leftarrow \text{left}(l, i, t)$
-					\STATE $(\textit{lr}, \textit{ir}) \leftarrow \text{right}(l, i, t)$
-					\STATE $\boxed{\textit{v1} \leftarrow \textit{asg1d}[\text{agp2idx}(\textit{ll}, \textit{il})]}$
-					\STATE $\boxed{\textit{v2} \leftarrow \textit{asg1d}[\text{agp2idx}(\textit{lr}, \textit{ir})]}$
-					\STATE $\textit{asg1d}[j] \leftarrow \textit{asg1d}[j] - (\textit{v1} + \textit{v2}) \cdot 0.5$
-					\STATE $j \leftarrow j - 1$
-				\ENDFOR
-			\ENDFOR
-		\ENDFOR
-    \ENDFOR
+ 	\FOR{$j \leftarrow subspace\_start + lane; j < subspace\_end; j \leftarrow j + 32$}
+ 		\IF{$lane = 0$}
+ 			\STATE $l \leftarrow idx2l(j)$
+ 		\ENDIF
+ 		\STATE $i \leftarrow idx2i(j)$
+ 		\STATE $(\textit{ll}, \textit{il}) \leftarrow \text{left}(l, i, t)$
+ 		\STATE $(\textit{lr}, \textit{ir}) \leftarrow \text{right}(l, i, t)$
+ 		\STATE $\textit{v1} \leftarrow \textit{asg1d}[\text{agp2idx}(\textit{ll}, \textit{il})]$
+ 		\STATE $\textit{v2} \leftarrow \textit{asg1d}[\text{agp2idx}(\textit{lr}, \textit{ir})]$
+ 		\STATE $\textit{asg1d}[j] \leftarrow \textit{asg1d}[j] - (\textit{v1} + \textit{v2}) \cdot 0.5$
+	\ENDFOR
  \end{algorithmic}
 }
 \end{algorithm}
 
-We start with the algorithm for hierarchization. In this algorithm, \textit{asg1d} is a 1d array containing the values of a dimensionally adaptive sparse grid. We traverse \textit{asg1d} $d$ times, each time updating the value at a point based on the values of its dependencies, i.e. its parents, in the current dimension, $t$. The iterations of the $t$ loop 
-% \footnote{We refer to loops using their respective loop counters.} 
-are dependent. The $g$ loop traverses \textit{groups} of grid points whereas the $b$ loop iterates over \textit{blocks} from the same group. Finally, the $k$ loop is equivalent to the traversal of all the points of a \textit{block}.
+% \begin{algorithm}[tbp]
+% \small{
+%  \caption{Hierarchization.}
+%  \label{alg:hierarchization}                       
+%  \begin{algorithmic}[1]
+%     \FOR{$t=1$ to $d$}
+% 		\STATE $j \leftarrow \text{size()}$
+% 		\FOR{$g=n$ downto $1$}
+% 			\FOR{$b=a(d, g)$ downto $1$}
+% 				\FOR{$k=2^g$ downto $1$}
+% 					\STATE $\boxed{(l, i) \leftarrow \text{idx2agp}(j)}$
+% 					\STATE $(\textit{ll}, \textit{il}) \leftarrow \text{left}(l, i, t)$
+% 					\STATE $(\textit{lr}, \textit{ir}) \leftarrow \text{right}(l, i, t)$
+% 					\STATE $\boxed{\textit{v1} \leftarrow \textit{asg1d}[\text{agp2idx}(\textit{ll}, \textit{il})]}$
+% 					\STATE $\boxed{\textit{v2} \leftarrow \textit{asg1d}[\text{agp2idx}(\textit{lr}, \textit{ir})]}$
+% 					\STATE $\textit{asg1d}[j] \leftarrow \textit{asg1d}[j] - (\textit{v1} + \textit{v2}) \cdot 0.5$
+% 					\STATE $j \leftarrow j - 1$
+% 				\ENDFOR
+% 			\ENDFOR
+% 		\ENDFOR
+%     \ENDFOR
+%  \end{algorithmic}
+% }
+% \end{algorithm}
 
-The left and right parents of a point in dimension $t$ is returned by the routines \textit{left} and \textit{right} respectively. Computing the left parent in dimension $t$ is equivalent to solving the equation $(i_t - 1) \cdot 2^{-l_t} = \textit{il}_t \cdot 2^{-\textit{ll}_t}$, where $\textit{il}_t \in \{1, \dots, 2^{\textit{ll}_t+1}\}$ and $\textit{il}_t$ odd. Except for the $t$-th components, all the other components of $\textit{ll}$ and $\textit{il}$ are equals to the ones of $l$ and $i$ respectively. Similarly, the right parent is given by $(i_t + 1) \cdot 2^{-l_t} = \textit{ir}_t \cdot 2^{-\textit{lr}_t}$. All its other components are the same as in $l$ and $i$. An important observation is that for both the left and right parent $\textit{ll}_t < l_t$ and $\textit{lr}_t < l_t$. 
+In the category of optimizations for integer operations, we start with loop
+invariant code motion (\textit{inv1}) which moves the computation of $l$ outside
+the loop over all points in the subspace. This is possible because in a subspace
+all points share the same $l$. Next, in \textit{inv2} we can compute the indices
+of all subspaces that the current one depends on before the loop and store them
+in an array in the shared memory of a CUDA multiprocessor.
 
-Understanding the parent concept is essential for understanding the cache locality of this algorithm. We first need to look at dependencies from a higher level. Remember that in our data layout, we pack the grids points in \textit{blocks}. The identifier of a \textit{block} is the $l$ shared by the points it contains. For any \textit{block} with the norm of its identifier $b$, the parents of its points reside in $b - 1$ blocks with the same components of their respective identifiers except the $t$-th. We can therefore say that the dependencies of the \textit{block} reside in a relatively compact memory space with a total size of $2^b - 1$, where $2^b$ is the size of the \textit{block}. This result invalidates part of the analysis presented in \cite{murarasu2011} that presents \textit{hierarchization} as a cache unfriendly operation. Note that the cache optimization is a direct benefit of the storage scheme.
 
-In Alg.~\ref{alg:hierarchization} a considerable amount of time is spent computing the bijections, \textit{idx2agp} and \textit{agp2idx}. Our first two optimizations, \textit{opt1} and \textit{opt2}, target exactly this problem. They perform loop invariant code motion, placing operations from the bijections immediately before the innermost loop. \textit{opt1} is based on the observation that all the points in the same \textit{block} have the same $l$. Hence $l$ can be computed only once for any \textit{block} with $2^g$ points. This means it is safe to move the computation of $l$ from line 6 outside the $k$ loop. \textit{opt2} relies on the fact that a \textit{block} whose identifier has the norm $g$ has $g - 1$ \textit{block} dependencies. This means that we can compute the indices in \textit{asg1d} of these \textit{blocks} immediately before the innermost loop and store them in a small 1d array, $\textit{idx12mem}$ of size $n$. By doing so, we reduce the number of operations in lines 9 and 10. Remember that the bijection computes three indices. With this optimization only $\textit{idx3}$ has to be computed in the body of the $k$ loop. The sum $\textit{idx1} + \textit{idx2}$ is obtained by indexing $\textit{idx12mem}$ using the $t$-th component of $\textit{ll}$ in line 9 and $\textit{lr}$ in line 10. In Sec.~\ref{sec:evaluation} we show that we cannot obtain this optimization automatically from compilers. Summarizing the results, we can say that \textit{opt1} provides a speedup of 1.75 over the basic (unoptimized) version. \textit{opt1} and \textit{opt2} accelerate together the routine approximately 3.75 times.
 
-Our third optimization, \textit{opt3}, reduces the number of instructions executed in line 6. After moving the computation of $l$ outside the loop, in line 6 there is only $i$ to compute. This is the inverse of the operation that computes $\textit{idx3}$ (Formula~\ref{eq:idx3}). The complexity of this operation is \Otime{d}. We replace it with an iterator that generates the current $i$ based on the previous $i$. The central concept of the iterator is the following. It increments the values of $i$ starting with the last component until no carry is generated or there are no more components left. A carry is produced when the $t$-th component of $i$ reaches the value $2^{l[t]}$. Whenever a carry is generated, the corresponding component of $i$ is reset to zero. Our results show that \textit{opt3} accelerates the version of \textit{hierarchization} optimized with \textit{opt1} and \textit{opt2} up 1.5 times. Note that \textit{opt3} introduces dependencies between the iterations of the innermost loop.
-
-In our fourth optimization, \textit{opt4}, we manually unroll the $k$ loop in order to allow for vectorization in the implicit loops from the lines 6, 9, and 10. This optimization is incompatible with \textit{opt3} since \textit{opt3} makes the iterations of the $k$ loop dependent. Therefore, we apply this optimization only on top of \textit{opt1} and \textit{opt2}. For vectorization, we use in \textit{opt4} SSE intrinsics for integer operations. We show in Sec.~\ref{sec:evaluation} that the benefit of \textit{opt4} depends highly on the compiler used. In general, our results show that \textit{opt3} performs better than \textit{opt4}.
-
-\begin{algorithm}[tbp]
-\small{
- \caption{Evaluation.}
- \label{alg:evaluation}                       
- \begin{algorithmic}[1]
-    \FOR{$j=1$ to $m$}
-		\STATE $\textit{idx23} \leftarrow 0$
-		\FOR{$g=1$ to $n$}
-			\FOR{$b=1$ to $a(d, g)$}
-				\STATE $\textit{idx1} \leftarrow 0$
-				\STATE $\textit{p} \leftarrow 1$
-				\STATE Compute $l$ for which $\text{pos}(l) = b$
-				\FOR{$t=1$ to $d$}
-					\STATE $i \leftarrow \lfloor x[j][t] / 2^{l[t]} \rfloor \cdot 2 + 1$
-					\STATE $p \leftarrow p \cdot \max(1 - |2^{l[t]} \cdot x[j][t] - i|, 0)$
-					\STATE $\textit{idx1} \leftarrow \textit{idx1} \cdot 2^{l[t]} + \lfloor x[j][t] / 2^{l[t]} \rfloor$
-				\ENDFOR
-				\STATE $r[j] \leftarrow r[j] + \textit{asg1d}[\textit{idx1} + \textit{idx23}] \cdot p$
-				\STATE $\textit{idx23} \leftarrow \textit{idx23} + 2^g$
-			\ENDFOR
-		\ENDFOR
-    \ENDFOR
- \end{algorithmic}
-}
-\end{algorithm}
-
-We now move to Alg.~\ref{alg:evaluation} representing the core of our \textit{evaluate} routine. We give a brief explanation of this algorithm. The $j$ loop from line 1 iterates over the points where we evaluate the sparse grid. These points are stored in the matrix $x[m][d]$. We store the evaluation results in the $r$ vector. Similarly to the algorithm for hierarchization, the $g$ and $b$ loops traverse \textit{groups} and \textit{blocks} respectively. For every point represented as a row of $x$, we use exactly one value from every $block$ (line 12). $\textit{idx23}$ is used to index the beginning of the current \textit{block} in the 1d representation of the sparse grid, i.e. the 1d array $\textit{asg1d}$.   
-
-\textit{opt5} applied to this algorithm makes some assumptions about the number of iterations of the loops. We know that in general $\textit{asg1d}$ can be up to three orders of magnitude bigger than $x$. On the other hand, $2^g$ is typically smaller than the size of $x$. In this context, for better locality we permute the loops from $(j, g, b, t)$ to $(g, b, j, t)$. Note that this optimization also reuses $l$ from line 6 for multiple points from $x$. Our results show that this improves the basic version of evaluation up to a factor of 2.5. It is worth mentioning that this speedup depends on the number of iterations of the loops. The benefits of \textit{opt5} can be more impressive if we increase the ratio between the size of $\textit{asg1d}$ and the size of $x$.
-
-Even after applying \textit{opt5}, there is not too much potential for vectorizing the $t$ loop due to the existence of dependencies between iterations. Nevertheless, we build \textit{opt6} on top of the permutation from \textit{opt5}. We can vectorize the innermost loop, $t$, by following the steps: grabbing iterations from the $j$ loop, inserting them in the $t$ loop, and reordering the instructions such that the same instructions operating on different data are packed together. The first two steps are equivalent to loop tiling, loop interchange, and loop unrolling. The third step is software pipelining in the unrolled loop. This is not enough as the access to $x$ is not stride-1. Actually, we have a stride-$d$ access. To cope with this problem, we change the layout of the $x$ matrix using the transformation $x[j][t] \rightarrow \tilde{x}[(j/\textit{m2}) \cdot d + t][j \bmod \textit{m2}]$, where $\textit{m2}$ is the size of the tile from the loop tiling transformation. Using $\tilde{x}$ instead of $x$ we have the stride-1 access required for efficient vectorization. By vectorizing the \textit{evaluate} routine using SSE intrinsics, we accelerate the version optimized using \textit{opt5} up to 2.6 times. 
-
-\subsection{Parallelization of Sparse Grid Operations}
-
-Our sparse grids routines are parallelized for shared memory machines using OpenMP. We provide in this part a brief description of the parallelization scheme used in \textit{fastsg}. 
-
-Alg.~\ref{alg:hierarchization} does not offer many possibilities for parallelization mainly due to the sequential optimizations. The $t$ loop has dependent iterations. The iterations of the $k$ loop are also dependent after applying \textit{opt3}. Additionally, we cannot update two \textit{groups} in parallel as one of them can depend on the old values of the second. Remember that we also aim at minimal memory consumption, meaning we want to keep our algorithm in-order, i.e. no extra copies of the data. Considering all these restrictions, the only loop whose iterations can be distributed among worker threads is the $b$ loop. 
-
-Regarding the evaluation algorithm, we have more options for parallelization. A first parallelization approach is taken to cover the case when the sparse grid is evaluated at a small number of points, e.g. one point. It implies distributing the iterations of the $b$ loop. In the case of one point, at the end of the \textit{evaluate} routine, the results computed by multiple threads are summed up. We use a coarser parallelization method if the number of points where we evaluate the sparse grid is reasonably big, e.g. bigger than 10,000. In this scenario, we parallelize the $j$ loop.
+% We start with the algorithm for hierarchization. In this algorithm,
+% \textit{asg1d} is a 1d array containing the values of a dimensionally adaptive
+% sparse grid. We traverse \textit{asg1d} $d$ times, each time updating the value
+% at a point based on the values of its dependencies, i.e. its parents, in the
+% current dimension, $t$. The iterations of the $t$ loop
+% % \footnote{We refer to loops using their respective loop counters.} 
+% are dependent. The $g$ loop traverses \textit{groups} of grid points whereas the
+% $b$ loop iterates over \textit{blocks} from the same group. Finally, the $k$
+% loop is equivalent to the traversal of all the points of a \textit{block}.
+% 
+% The left and right parents of a point in dimension $t$ is returned by the
+% routines \textit{left} and \textit{right} respectively. Computing the left
+% parent in dimension $t$ is equivalent to solving the equation $(i_t - 1) \cdot
+% 2^{-l_t} = \textit{il}_t \cdot 2^{-\textit{ll}_t}$, where $\textit{il}_t \in
+% \{1, \dots, 2^{\textit{ll}_t+1}\}$ and $\textit{il}_t$ odd. Except for the
+% $t$-th components, all the other components of $\textit{ll}$ and $\textit{il}$
+% are equals to the ones of $l$ and $i$ respectively. Similarly, the right parent
+% is given by $(i_t + 1) \cdot 2^{-l_t} = \textit{ir}_t \cdot 2^{-\textit{lr}_t}$.
+% All its other components are the same as in $l$ and $i$. An important
+% observation is that for both the left and right parent $\textit{ll}_t < l_t$ and
+% $\textit{lr}_t < l_t$.
+% 
+% Understanding the parent concept is essential for understanding the cache
+% locality of this algorithm. We first need to look at dependencies from a higher
+% level. Remember that in our data layout, we pack the grids points in
+% \textit{blocks}. The identifier of a \textit{block} is the $l$ shared by the
+% points it contains. For any \textit{block} with the norm of its identifier $b$,
+% the parents of its points reside in $b - 1$ blocks with the same components of
+% their respective identifiers except the $t$-th. We can therefore say that the
+% dependencies of the \textit{block} reside in a relatively compact memory space
+% with a total size of $2^b - 1$, where $2^b$ is the size of the \textit{block}.
+% This result invalidates part of the analysis presented in \cite{murarasu2011}
+% that presents \textit{hierarchization} as a cache unfriendly operation. Note
+% that the cache optimization is a direct benefit of the storage scheme.
+% 
+% In Alg.~\ref{alg:hierarchization} a considerable amount of time is spent
+% computing the bijections, \textit{idx2agp} and \textit{agp2idx}. Our first two
+% optimizations, \textit{opt1} and \textit{opt2}, target exactly this problem.
+% They perform loop invariant code motion, placing operations from the bijections
+% immediately before the innermost loop. \textit{opt1} is based on the observation
+% that all the points in the same \textit{block} have the same $l$. Hence $l$ can
+% be computed only once for any \textit{block} with $2^g$ points. This means it is
+% safe to move the computation of $l$ from line 6 outside the $k$ loop.
+% \textit{opt2} relies on the fact that a \textit{block} whose identifier has the
+% norm $g$ has $g - 1$ \textit{block} dependencies. This means that we can compute
+% the indices in \textit{asg1d} of these \textit{blocks} immediately before the
+% innermost loop and store them in a small 1d array, $\textit{idx12mem}$ of size
+% $n$. By doing so, we reduce the number of operations in lines 9 and 10. Remember
+% that the bijection computes three indices. With this optimization only
+% $\textit{idx3}$ has to be computed in the body of the $k$ loop. The sum
+% $\textit{idx1} + \textit{idx2}$ is obtained by indexing $\textit{idx12mem}$
+% using the $t$-th component of $\textit{ll}$ in line 9 and $\textit{lr}$ in line
+% 10. In Sec.~\ref{sec:evaluation} we show that we cannot obtain this optimization
+% automatically from compilers. Summarizing the results, we can say that
+% \textit{opt1} provides a speedup of 1.75 over the basic (unoptimized) version.
+% \textit{opt1} and \textit{opt2} accelerate together the routine approximately
+% 3.75 times.
+% 
+% Our third optimization, \textit{opt3}, reduces the number of instructions
+% executed in line 6. After moving the computation of $l$ outside the loop, in
+% line 6 there is only $i$ to compute. This is the inverse of the operation that
+% computes $\textit{idx3}$ (Formula~\ref{eq:idx3}). The complexity of this
+% operation is \Otime{d}. We replace it with an iterator that generates the
+% current $i$ based on the previous $i$. The central concept of the iterator is
+% the following. It increments the values of $i$ starting with the last component
+% until no carry is generated or there are no more components left. A carry is
+% produced when the $t$-th component of $i$ reaches the value $2^{l[t]}$. Whenever
+% a carry is generated, the corresponding component of $i$ is reset to zero. Our
+% results show that \textit{opt3} accelerates the version of
+% \textit{hierarchization} optimized with \textit{opt1} and \textit{opt2} up 1.5
+% times. Note that \textit{opt3} introduces dependencies between the iterations of
+% the innermost loop.
+% 
+% In our fourth optimization, \textit{opt4}, we manually unroll the $k$ loop in
+% order to allow for vectorization in the implicit loops from the lines 6, 9, and
+% 10. This optimization is incompatible with \textit{opt3} since \textit{opt3}
+% makes the iterations of the $k$ loop dependent. Therefore, we apply this
+% optimization only on top of \textit{opt1} and \textit{opt2}. For vectorization,
+% we use in \textit{opt4} SSE intrinsics for integer operations. We show in
+% Sec.~\ref{sec:evaluation} that the benefit of \textit{opt4} depends highly on
+% the compiler used. In general, our results show that \textit{opt3} performs
+% better than \textit{opt4}.
+% 
+% \begin{algorithm}[tbp]
+% \small{
+%  \caption{Evaluation.}
+%  \label{alg:evaluation}                       
+%  \begin{algorithmic}[1]
+%     \FOR{$j=1$ to $m$}
+% 		\STATE $\textit{idx23} \leftarrow 0$
+% 		\FOR{$g=1$ to $n$}
+% 			\FOR{$b=1$ to $a(d, g)$}
+% 				\STATE $\textit{idx1} \leftarrow 0$
+% 				\STATE $\textit{p} \leftarrow 1$
+% 				\STATE Compute $l$ for which $\text{pos}(l) = b$
+% 				\FOR{$t=1$ to $d$}
+% 					\STATE $i \leftarrow \lfloor x[j][t] / 2^{l[t]} \rfloor \cdot 2 + 1$
+% 					\STATE $p \leftarrow p \cdot \max(1 - |2^{l[t]} \cdot x[j][t] - i|, 0)$
+% 					\STATE $\textit{idx1} \leftarrow \textit{idx1} \cdot 2^{l[t]} + \lfloor x[j][t] / 2^{l[t]} \rfloor$
+% 				\ENDFOR
+% 				\STATE $r[j] \leftarrow r[j] + \textit{asg1d}[\textit{idx1} + \textit{idx23}] \cdot p$
+% 				\STATE $\textit{idx23} \leftarrow \textit{idx23} + 2^g$
+% 			\ENDFOR
+% 		\ENDFOR
+%     \ENDFOR
+%  \end{algorithmic}
+% }
+% \end{algorithm}
+% 
+% We now move to Alg.~\ref{alg:evaluation} representing the core of our
+% \textit{evaluate} routine. We give a brief explanation of this algorithm. The
+% $j$ loop from line 1 iterates over the points where we evaluate the sparse grid.
+% These points are stored in the matrix $x[m][d]$. We store the evaluation results
+% in the $r$ vector. Similarly to the algorithm for hierarchization, the $g$ and
+% $b$ loops traverse \textit{groups} and \textit{blocks} respectively. For every
+% point represented as a row of $x$, we use exactly one value from every $block$
+% (line 12). $\textit{idx23}$ is used to index the beginning of the current
+% \textit{block} in the 1d representation of the sparse grid, i.e. the 1d array
+% $\textit{asg1d}$.
+% 
+% \textit{opt5} applied to this algorithm makes some assumptions about the number
+% of iterations of the loops. We know that in general $\textit{asg1d}$ can be up
+% to three orders of magnitude bigger than $x$. On the other hand, $2^g$ is
+% typically smaller than the size of $x$. In this context, for better locality we
+% permute the loops from $(j, g, b, t)$ to $(g, b, j, t)$. Note that this
+% optimization also reuses $l$ from line 6 for multiple points from $x$. Our
+% results show that this improves the basic version of evaluation up to a factor
+% of 2.5. It is worth mentioning that this speedup depends on the number of
+% iterations of the loops. The benefits of \textit{opt5} can be more impressive if
+% we increase the ratio between the size of $\textit{asg1d}$ and the size of $x$.
+% 
+% Even after applying \textit{opt5}, there is not too much potential for
+% vectorizing the $t$ loop due to the existence of dependencies between
+% iterations. Nevertheless, we build \textit{opt6} on top of the permutation from
+% \textit{opt5}. We can vectorize the innermost loop, $t$, by following the steps:
+% grabbing iterations from the $j$ loop, inserting them in the $t$ loop, and
+% reordering the instructions such that the same instructions operating on
+% different data are packed together. The first two steps are equivalent to loop
+% tiling, loop interchange, and loop unrolling. The third step is software
+% pipelining in the unrolled loop. This is not enough as the access to $x$ is not
+% stride-1. Actually, we have a stride-$d$ access. To cope with this problem, we
+% change the layout of the $x$ matrix using the transformation $x[j][t]
+% \rightarrow \tilde{x}[(j/\textit{m2}) \cdot d + t][j \bmod \textit{m2}]$, where
+% $\textit{m2}$ is the size of the tile from the loop tiling transformation. Using
+% $\tilde{x}$ instead of $x$ we have the stride-1 access required for efficient
+% vectorization. By vectorizing the \textit{evaluate} routine using SSE
+% intrinsics, we accelerate the version optimized using \textit{opt5} up to 2.6
+% times.
+% 
+% \subsection{Parallelization of Sparse Grid Operations}
+% 
+% Our sparse grids routines are parallelized for shared memory machines using
+% OpenMP. We provide in this part a brief description of the parallelization
+% scheme used in \textit{fastsg}.
+% 
+% Alg.~\ref{alg:hierarchization} does not offer many possibilities for
+% parallelization mainly due to the sequential optimizations. The $t$ loop has
+% dependent iterations. The iterations of the $k$ loop are also dependent after
+% applying \textit{opt3}. Additionally, we cannot update two \textit{groups} in
+% parallel as one of them can depend on the old values of the second. Remember
+% that we also aim at minimal memory consumption, meaning we want to keep our
+% algorithm in-order, i.e. no extra copies of the data. Considering all these
+% restrictions, the only loop whose iterations can be distributed among worker
+% threads is the $b$ loop.
+% 
+% Regarding the evaluation algorithm, we have more options for parallelization. A
+% first parallelization approach is taken to cover the case when the sparse grid
+% is evaluated at a small number of points, e.g. one point. It implies
+% distributing the iterations of the $b$ loop. In the case of one point, at the
+% end of the \textit{evaluate} routine, the results computed by multiple threads
+% are summed up. We use a coarser parallelization method if the number of points
+% where we evaluate the sparse grid is reasonably big, e.g. bigger than 10,000. In
+% this scenario, we parallelize the $j$ loop.
