@@ -1,94 +1,82 @@
 \section{Optimization Strategies}
 
-% There are three main routines that are the hotspots of our library with regard
-% to performance: \textit{init}, \textit{hierarchize}, and \textit{evaluate}.
-% Since \textit{init} can be seen as a subpart of \textit{hierarchize}, we focus
-% only on the last two. The optimizations applied to \textit{init} are the same as
-% for \textit{hierarchize}. Note that it is difficult to measure the impact of the
-% optimizations on \textit{init} since it depends on the $f$ function provided by
-% the user of the library. Depending on the application, this can be a simple or a
-% complex high-dimensional function, potentially executing in a significant amount
-% of time.
-% 
-% We do not concentrate on the theory behind these routines. For the detailed
-% theory we refer the reader to \cite{bungartz2004}. A summary is available in
-% \cite{murarasu2011}. We describe instead the data dependencies that narrow the
-% set of transformations that can be applied to the code. The dependencies also
-% help to explain the performance of our library.
-
 The computational core of \textit{fastsg} resides in \textit{hierarchize}, and
 \textit{evaluate} routines as presented in \cite{}. We will not enter here into
-the details of these procedures here because a summary is already available in
+the details of these procedures because a summary is already available in
 \cite{murarasu2011}. Instead, we present a set of optimizations for both of them
-in the context of GPUs. We grouped these optimizations into 3 categories based
+in the context of GPUs. We group these optimizations into 3 categories based
 on their end purpose: memory locality, vectorization, and operations with
 integers.
 
-We start with a basic version of hierarchization algorithm in which each warp
-on the GPU computes the coefficients for one subspace of the sparse grid for a
-better cache locality and in order to reduce the thread divergence within warps.
-Because the coefficients for one subspace are stored contiguously in memory, we
-also want for these values to be accessed simultaneously. Therefore, each thread
-within a warp starts reading at index equal to its lane index and then every
-element found at a distance multiple of 32 (the number of threads within a
-warp). In this way, a warp will access the memory contiguously for each read
-instruction.
-
-TODO.
-
 \begin{algorithm}[tbp]
 \small{
- \caption{Hierarchization kernel.}
- \label{alg:hierarchization_kernel}                       
- \begin{algorithmic}[1]
- 	\FOR{$j \leftarrow subspace\_start + lane; j < subspace\_end; j \leftarrow j + 32$}
- 		\IF{$lane = 0$}
- 			\STATE $l \leftarrow idx2l(j)$
- 		\ENDIF
- 		\STATE $i \leftarrow idx2i(j)$
- 		\STATE $(\textit{ll}, \textit{il}) \leftarrow \text{left}(l, i, t)$
- 		\STATE $(\textit{lr}, \textit{ir}) \leftarrow \text{right}(l, i, t)$
- 		\STATE $\textit{v1} \leftarrow \textit{asg1d}[\text{agp2idx}(\textit{ll}, \textit{il})]$
- 		\STATE $\textit{v2} \leftarrow \textit{asg1d}[\text{agp2idx}(\textit{lr}, \textit{ir})]$
- 		\STATE $\textit{asg1d}[j] \leftarrow \textit{asg1d}[j] - (\textit{v1} + \textit{v2}) \cdot 0.5$
-	\ENDFOR
- \end{algorithmic}
+	\caption{Hierarchization.}
+ 	\label{alg:hierarchization}                       
+
+ 	\begin{algorithmic}[1]
+ 		\For{$t=1$ to $D$}
+ 			\For{$k=L$ downto $1$}
+ 				\State \Call{HierarchizeKernel}{$t, k$}
+ 			\EndFor
+ 		\EndFor
+ 		\algstore{bkbreak}
+	\end{algorithmic}
+ 
+	\begin{algorithmic}[1]
+  		\algrestore{bkbreak}
+  		\Procedure{HierarchizeKernel}{$t, k$}
+	 		\For{$j \leftarrow \Call{BlockStart}{k} + lane; j < \Call{BlockEnd}{k};	j\leftarrow j + 32$}
+	 			\If{$lane = 0$}
+	 				\State $l \leftarrow idx2l(j)$
+	 			\EndIf
+	 			\State $i \leftarrow idx2i(j)$
+	 			\State $(\textit{ll}, \textit{il}) \leftarrow \text{left}(l, i, t)$
+	 			\State $(\textit{lr}, \textit{ir}) \leftarrow \text{right}(l, i, t)$
+	 			\State $\textit{v1} \leftarrow \textit{asg1d}[\text{agp2idx}(\textit{ll},
+	 			\textit{il})]$ \State $\textit{v2} \leftarrow
+	 			\textit{asg1d}[\text{agp2idx}(\textit{lr}, \textit{ir})]$ \State$\textit{asg1d}[j] \leftarrow \textit{asg1d}[j] - (\textit{v1} +\textit{v2}) \cdot 0.5$
+			\EndFor
+		\EndProcedure
+	\end{algorithmic}
 }
 \end{algorithm}
 
-% \begin{algorithm}[tbp]
-% \small{
-%  \caption{Hierarchization.}
-%  \label{alg:hierarchization}                       
-%  \begin{algorithmic}[1]
-%     \FOR{$t=1$ to $d$}
-% 		\STATE $j \leftarrow \text{size()}$
-% 		\FOR{$g=n$ downto $1$}
-% 			\FOR{$b=a(d, g)$ downto $1$}
-% 				\FOR{$k=2^g$ downto $1$}
-% 					\STATE $\boxed{(l, i) \leftarrow \text{idx2agp}(j)}$
-% 					\STATE $(\textit{ll}, \textit{il}) \leftarrow \text{left}(l, i, t)$
-% 					\STATE $(\textit{lr}, \textit{ir}) \leftarrow \text{right}(l, i, t)$
-% 					\STATE $\boxed{\textit{v1} \leftarrow \textit{asg1d}[\text{agp2idx}(\textit{ll}, \textit{il})]}$
-% 					\STATE $\boxed{\textit{v2} \leftarrow \textit{asg1d}[\text{agp2idx}(\textit{lr}, \textit{ir})]}$
-% 					\STATE $\textit{asg1d}[j] \leftarrow \textit{asg1d}[j] - (\textit{v1} + \textit{v2}) \cdot 0.5$
-% 					\STATE $j \leftarrow j - 1$
-% 				\ENDFOR
-% 			\ENDFOR
-% 		\ENDFOR
-%     \ENDFOR
-%  \end{algorithmic}
-% }
-% \end{algorithm}
+We start with a basic version of hierarchization algorithm where we loop with
+$t$ variable over all dimensions, with $k$ variable over all refinement levels
+and then we call the kernel procedure. Each warp on the GPU computes the
+coefficients for one block of the sparse grid in order to achieve a better cache
+locality and to reduce the thread divergence within warps. Because the
+coefficients for one block are stored contiguously in memory, we also want for
+these values to be accessed simultaneously. Therefore, each thread within a warp
+starts reading at index equal to its lane index and then subsequently every
+element found at a distance multiple of 32 (the number of threads within a
+warp). In this way, a warp will access the memory contiguously at each read
+instruction. Here $l$ and $i$ are the levels and respectively index arrays
+which represent the coordinates of one point in the grid. We store them in the
+shared memory because they are frequently used. The routines \textit{left} and
+\textit{right} return the left and respectively right parents of a point in
+dimension $t$, while \textit{agp2idx} returns the index where point $(l, i)$ is
+stored in the array.
 
-In the category of optimizations for integer operations, we start with loop
-invariant code motion (\textit{inv1}) which moves the computation of $l$ outside
-the loop over all points in the subspace. This is possible because in a subspace
-all points share the same $l$. Next, in \textit{inv2} we can compute the indices
-of all subspaces that the current one depends on before the loop and store them
-in an array in the shared memory of a CUDA multiprocessor.
+We now optimize this basic algorithm and we start with optimizations for integer
+operations. The first observation we make is that computing the $l$ array for
+each point in the block is redundant because within a block, it has the same
+value. Therefore loop invariant code motion optimization (\textit{inv1}) moves
+the computation of $l$ outside the loop. Next, in \textit{inv2} we can compute
+the indices of all block that the current one depends on before the loop and
+store them in an array in the shared memory of a CUDA multiprocessor.
 
+TODO. \textit{inv3}.
 
+\textit{inv4} completely removes the calls to \textit{left}, \textit{right} and
+\textit{agp2idx} routines by precomputing $l$ and $i$ for all dependencies of
+all blocks before the hierarchization algorithm, caching them in constant memory
+and simply fetching them when needed.
+
+Lastly, in order to improve memory locality and the data access patterns,
+\textit{ichg1} optimization does a loop interchange by moving the loop over the
+refinement levels from line 2 inside the kernel. In this way, one warp will not
+only process one block, but also all its parent blocks.
 
 % We start with the algorithm for hierarchization. In this algorithm,
 % \textit{asg1d} is a 1d array containing the values of a dimensionally adaptive
@@ -172,6 +160,37 @@ in an array in the shared memory of a CUDA multiprocessor.
 % Sec.~\ref{sec:evaluation} that the benefit of \textit{opt4} depends highly on
 % the compiler used. In general, our results show that \textit{opt3} performs
 % better than \textit{opt4}.
+
+We move now to the algorithm for evaluation.
+
+\begin{algorithm}[tbp]
+\small{
+	\caption{Evaluation.}
+	\label{alg:evaluation}
+	\begin{algorithmic}[1]
+ 		\Procedure{EvaluateKernel}{$w$}
+    		\For{$j \leftarrow \Call{ChunkStart}{w} + lane; j < \Call{ChunkEnd}{w}; j \leftarrow j + 32$} 
+    		\State $\textit{idx23} \leftarrow 0$
+				\For{$g=1$ to $L$}
+					\For{$b=1$ to $a(D, g)$}
+						\State $\textit{idx1} \leftarrow 0$
+						\State $\textit{p} \leftarrow 1$
+						\State Compute $l$ for which $\text{pos}(l) = b$
+						\For{$t=1$ to $D$}
+							\State $i \leftarrow \lfloor x[j][t] / 2^{l[t]} \rfloor \cdot 2 + 1$
+							\State $p \leftarrow p \cdot \max(1 - |2^{l[t]} \cdot x[j][t] - i|, 0)$
+							\State $\textit{idx1} \leftarrow \textit{idx1} \cdot 2^{l[t]} + \lfloor	x[j][t] / 2^{l[t]} \rfloor$
+						\EndFor
+						\State $r[j] \leftarrow r[j] + \textit{asg1d}[\textit{idx1}	+\textit{idx23}] \cdot p$ 
+						\State $\textit{idx23} \leftarrow \textit{idx23} + 2^g$
+					\EndFor
+				\EndFor
+    		\EndFor
+    	\EndProcedure
+ 	\end{algorithmic}
+}
+\end{algorithm}
+
 % 
 % \begin{algorithm}[tbp]
 % \small{

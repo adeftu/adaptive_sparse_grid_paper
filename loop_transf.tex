@@ -188,11 +188,11 @@ memory access patterns from these examples are similar to the patterns from
  \caption{}
  \label{alg:example1}                       
  \begin{algorithmic}[1]
-    \FOR{$i=1$ to $m$}
-		\FOR{$j=1$ to $n$}
-			\STATE $a[i] \leftarrow \text{op}(a[i], b[j], c[j])$
-		\ENDFOR
-    \ENDFOR
+    \For{$i=1$ to $m$}
+		\For{$j=1$ to $n$}
+			\State $a[i] \leftarrow \text{op}(a[i], b[j], c[j])$
+		\EndFor
+    \EndFor
  \end{algorithmic}
 }
 \end{algorithm}
@@ -208,11 +208,11 @@ memory access patterns from these examples are similar to the patterns from
  \caption{A specialization of Ex.~\ref{alg:example1}.}
  \label{alg:example2}                       
  \begin{algorithmic}[1]
-    \FOR{$i=1$ to $m$}
-		\FOR{$j=1$ to $n$}
-			\STATE $a[i] \leftarrow a[i] \cdot b[j] + c[j]$
-		\ENDFOR
-    \ENDFOR
+    \For{$i=1$ to $m$}
+		\For{$j=1$ to $n$}
+			\State $a[i] \leftarrow a[i] \cdot b[j] + c[j]$
+		\EndFor
+    \EndFor
  \end{algorithmic}
 }
 \end{algorithm}
@@ -228,14 +228,14 @@ memory access patterns from these examples are similar to the patterns from
  \caption{}
  \label{alg:example3}                       
  \begin{algorithmic}[1]
-    \FOR{$i=1$ to $m$}
-		\FOR{$j=1$ to $n$}
-			\FOR{$k=1$ to $p$}
-				\STATE $a[i] \leftarrow a[i] \cdot b[j][k] + c[i][k]$
-				\STATE $d[i] \leftarrow d[i] \cdot e[i][k] + f[j][k]$
-			\ENDFOR
-		\ENDFOR
-    \ENDFOR
+    \For{$i=1$ to $m$}
+		\For{$j=1$ to $n$}
+			\For{$k=1$ to $p$}
+				\State $a[i] \leftarrow a[i] \cdot b[j][k] + c[i][k]$
+				\State $d[i] \leftarrow d[i] \cdot e[i][k] + f[j][k]$
+			\EndFor
+		\EndFor
+    \EndFor
  \end{algorithmic}
 }
 \end{algorithm}
