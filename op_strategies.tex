@@ -212,6 +212,18 @@ such that instead of storing the the points horizontally, one point per row, it
 stores them vertically in $x[(N/32+1) \cdot D][32]$. Thus, all threads in a warp
 access one row in this new matrix for each iteration over dimensions.
 
+Regarding memory locality, we present two optimizations, \textit{ichg2'} and
+\textit{ichg2''} which do a loop interchange by moving the loop over
+interpolation points from line 2 inside the loop over \textit{blocks} from
+line5. In addition, \textit{ichg2''} also moves the loops over \textit{groups}
+and \textit{blocks} outside the kernel. The goal of these optimizations is to
+improve read accesses by having the innermost loop as tight as possible over the
+block of memory.
+
+The last optimization is a combination of strength reduction and loop invariant
+code motion introduced in order to speed up integer operations. \textit{sred1'}
+precomputes all divisions in lines 12-14 outside the innermost loop and replaces
+them with multiplications with the inverse.
 % 
 % \begin{algorithm}[tbp]
 % \small{
