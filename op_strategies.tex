@@ -15,8 +15,8 @@ integers.
 
  	\begin{algorithmic}[1]
  		\For{$t=1$ to $D$}
- 			\For{$k=L$ downto $1$}
- 				\State \Call{HierarchizeKernel}{$t, k$}
+ 			\For{$g=L$ downto $1$}
+ 				\State \Call{HierarchizeKernel}{$t, g$}
  			\EndFor
  		\EndFor
  		\algstore{bkbreak}
@@ -24,8 +24,8 @@ integers.
  
 	\begin{algorithmic}[1]
   		\algrestore{bkbreak}
-  		\Procedure{HierarchizeKernel}{$t, k$}
-	 		\For{$j \leftarrow \Call{BlockStart}{k} + lane; j < \Call{BlockEnd}{k};	j\leftarrow j + 32$}
+  		\Procedure{HierarchizeKernel}{$t, g$}
+	 		\For{$j \leftarrow \Call{BlockStart}{g} + lane; j < \Call{BlockEnd}{g}; j\leftarrow j + 32$}
 	 			\If{$lane = 0$}
 	 				\State $l \leftarrow idx2l(j)$
 	 			\EndIf
@@ -42,7 +42,7 @@ integers.
 \end{algorithm}
 
 We start with a basic version of hierarchization algorithm where we loop with
-$t$ variable over all dimensions, with $k$ variable over all refinement levels
+$t$ variable over all dimensions, with $g$ variable over all \textit{groups}
 and then we call the kernel procedure. Each warp on the GPU computes the
 coefficients for one block of the sparse grid in order to achieve a better cache
 locality and to reduce the thread divergence within warps. Because the
@@ -56,7 +56,7 @@ which represent the coordinates of one point in the grid. We store them in the
 shared memory because they are frequently used. The routines \textit{left} and
 \textit{right} return the left and respectively right parents of a point in
 dimension $t$, while \textit{agp2idx} returns the index where point $(l, i)$ is
-stored in the array.
+stored in the 1d representation of the sparse grid, $asg1d$.
 
 We now optimize this basic algorithm and we start with optimizations for integer
 operations. The first observation we make is that computing the $l$ array for
@@ -75,7 +75,7 @@ and simply fetching them when needed.
 
 Lastly, in order to improve memory locality and the data access patterns,
 \textit{ichg1} optimization does a loop interchange by moving the loop over the
-refinement levels from line 2 inside the kernel. In this way, one warp will not
+\textit{groups} from line 2 inside the kernel. In this way, one warp will not
 only process one block, but also all its parent blocks.
 
 % We start with the algorithm for hierarchization. In this algorithm,
@@ -161,8 +161,6 @@ only process one block, but also all its parent blocks.
 % the compiler used. In general, our results show that \textit{opt3} performs
 % better than \textit{opt4}.
 
-We move now to the algorithm for evaluation.
-
 \begin{algorithm}[tbp]
 \small{
 	\caption{Evaluation.}
@@ -175,7 +173,9 @@ We move now to the algorithm for evaluation.
 					\For{$b=1$ to $a(D, g)$}
 						\State $\textit{idx1} \leftarrow 0$
 						\State $\textit{p} \leftarrow 1$
-						\State Compute $l$ for which $\text{pos}(l) = b$
+						\If{$threadIdx.x = 0$}
+							\State Compute $l$ for which $\text{pos}(l) = b$
+						\EndIf
 						\For{$t=1$ to $D$}
 							\State $i \leftarrow \lfloor x[j][t] / 2^{l[t]} \rfloor \cdot 2 + 1$
 							\State $p \leftarrow p \cdot \max(1 - |2^{l[t]} \cdot x[j][t] - i|, 0)$
@@ -190,6 +190,27 @@ We move now to the algorithm for evaluation.
  	\end{algorithmic}
 }
 \end{algorithm}
+
+We move now to the algorithm for evaluation. The coordinates of all $N$ points
+to be evaluated are stored contiguously in a matrix $x[N][D]$ which is processed
+in chunks by each warp, each warp computing one chunk of size $w$. The memory
+access pattern for one thread inside of its chunk is the same as for
+$hierarchization$ algorithm where each thread computes points stored at indices
+multiple of 32 starting from the corresponding lane. The $g$ and $b$ loops
+traverse \textit{groups} and \textit{blocks} respectively. $\textit{idx23}$ is
+used to index the beginning of the current \textit{block} in $\textit{asg1d}$,
+while $idx1$ idexes the current point in this \textit{block}.
+
+We start with optimizations for a better vectorization. The observation we make
+here is that the loop over dimensions on line 11 has a non-contiguous access
+pattern for a warp beacuse at each read instruction the threads within a
+warp access elements found at $D$ distance. \textit{vec1'} improves this by
+using a technique similar to the one we described for both
+\textit{hierarchization} and \textit{evaluation} algorithms for memory access by
+threads within a warp. More specific, \textit{vec1'} transposes the matrix $x$
+such that instead of storing the the points horizontally, one point per row, it
+stores them vertically in $x[(N/32+1) \cdot D][32]$. Thus, all threads in a warp
+access one row in this new matrix for each iteration over dimensions.
 
 % 
 % \begin{algorithm}[tbp]
