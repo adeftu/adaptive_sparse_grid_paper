@@ -4,8 +4,8 @@ The computational core of \textit{fastsg} resides in \textit{hierarchize}, and
 \textit{evaluate} routines as presented in \cite{}. We will not enter here into
 the details of these procedures because a summary is already available in
 \cite{murarasu2011}. Instead, we present a set of optimizations for both of them
-in the context of GPUs. We group these optimizations into 3 categories based
-on their end purpose: memory locality, vectorization, and operations with
+in the context of CPUs and GPUs. We group these optimizations into 3 categories
+based on their end purpose: memory locality, vectorization, and operations with
 integers.
 
 \begin{algorithm}[tbp]
@@ -41,8 +41,8 @@ integers.
 }
 \end{algorithm}
 
-We start with a basic version of hierarchization algorithm where we loop with
-$t$ variable over all dimensions, with $g$ variable over all \textit{groups}
+We start with a basic version of hierarchization algorithm for GPU where we loop
+with $t$ variable over all dimensions, with $g$ variable over all \textit{groups}
 and then we call the kernel procedure. Each warp on the GPU computes the
 coefficients for one block of the sparse grid in order to achieve a better cache
 locality and to reduce the thread divergence within warps. Because the
@@ -63,15 +63,13 @@ operations. The first observation we make is that computing the $l$ array for
 each point in the block is redundant because within a block, it has the same
 value. Therefore loop invariant code motion optimization (\textit{inv1}) moves
 the computation of $l$ outside the loop. Next, in \textit{inv2} we can compute
-the indices of all block that the current one depends on before the loop and
-store them in an array in the shared memory of a CUDA multiprocessor.
+the indices of all blocks that the current one depends on before the loop and
+store them in an array (in the heap space in the case of CPU implementation and
+in the shared memory of a CUDA multiprocessor for the GPU version).
 
 TODO. \textit{inv3}.
 
-\textit{inv4} completely removes the calls to \textit{left}, \textit{right} and
-\textit{agp2idx} routines by precomputing $l$ and $i$ for all dependencies of
-all blocks before the hierarchization algorithm, caching them in constant memory
-and simply fetching them when needed.
+TODO. \textit{inv4}.
 
 Lastly, in order to improve memory locality and the data access patterns,
 \textit{ichg1} optimization does a loop interchange by moving the loop over the
