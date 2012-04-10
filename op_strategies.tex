@@ -212,10 +212,11 @@ the the points horizontally, one point per row, it stores them vertically in
 $x[(N/32+1) \cdot D][32]$. Thus, all threads in a warp access one row in this
 new matrix for each iteration over dimensions.
 
-Regarding memory locality, we present two optimizations, \textit{ichg2'} and
-\textit{ichg2''} which do a loop interchange by moving the loop over
-interpolation points from line 2 inside the loop over \textit{blocks} from
-line5. In addition, \textit{ichg2''} also moves the loops over \textit{groups}
+Regarding memory locality, \textit{ichg2} does a loop interchange by moving the
+loop over interpolation points from line 2 inside the loop over \textit{blocks}
+from line 5. In the case of GPUs, we have two variations of this optimization.
+The first one, \textit{ichg2'} corresponds to \textit{ichg2} while the second
+one, \textit{ichg2''}, additionally moves the loops over \textit{groups}
 and \textit{blocks} outside the kernel. The goal of these optimizations is to
 improve read accesses by having the innermost loop as tight as possible over the
 block of memory.

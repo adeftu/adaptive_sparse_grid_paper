@@ -4,14 +4,31 @@ In this section we present the results obtained for both CPU and GPU
 implementations and analyze the speedup obtained with the optimizations
 described in Section~\ref{sec:op_strategies}.
 
+Our test system is a quad-core Intel Core i7-920 running at 2.67 GHz with
+Hyper-threading enabled. For compilation we used \textit{gcc 4.6} with flags
+``-O3 -march=native -funroll-loops -fargument-noalias -fopenmp''.
+
 The GPU cards used were GeForce GTX 480 of from Nvidia (Fermi architecture)
 having 1.5 GB of total memory and 15 multiprocessors each with 32 cores
 operating at a clock speed of 1.4 GHz. An important observation to make is that
-the device suports CUDA Capability 2.0 which, among other features, includes the
-possibility for the same on-chip memory to be used for both L1 cache and shared
+the device supports CUDA Capability 2.0 which, among other features, includes
+the possibility for the same on-chip memory to be used for both L1 cache and shared
 memory. It can be configured as either 48 KB of shared memory and 16 KB of L1
 cache or as 16 KB of shared memory and 48 KB of L1 cache. We used the second
 option for the \textit{evaluation} algorithm in order to cache the accesses to
-local and global memory and also temporary register spills.
+local and global memory and also temporary register spills. For compilation, we
+used \textit{Cuda Toolkit 4.1} with flags ``-arch=sm\_20''.
 
-For compilation, we used Cuda Toolkit 4.1 with flags ``-arch=sm\_20''.
+We present the impact of our optimizations for both CPU and GPU implementations
+by measuring the GFlops rate and comparing with the reference baseline case
+where no optimizations were applied. We start with the results obtained for the
+\textit{hierarchization} algorithm, depicted in Fig.~\ref{}. We can see here
+that when applying all optimizations, a speedup of up to 8x is obtained. With
+the increase in the number of dimensions and the decrease of the sparse grid
+size, the speedup tends to decrease. This happens because most of the
+optimizations (e.g. improving caching and memory access patterns) are suitable
+for large grids.
+
+Looking at the \textit{evaluation} algorithm, we observe a clear improvement
+brought by \textit{sred1'}. This shows that division instructions are very
+expensive, fact also confirmed by the Nvidia Programming Guide.
