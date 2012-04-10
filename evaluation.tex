@@ -1,2 +1,17 @@
 \section{Evaluation}
-TODO.
+
+In this section we present the results obtained for both CPU and GPU
+implementations and analyze the speedup obtained with the optimizations
+described in Section~\ref{sec:op_strategies}.
+
+The GPU cards used were GeForce GTX 480 of from Nvidia (Fermi architecture)
+having 1.5 GB of total memory and 15 multiprocessors each with 32 cores
+operating at a clock speed of 1.4 GHz. An important observation to make is that
+the device suports CUDA Capability 2.0 which, among other features, includes the
+possibility for the same on-chip memory to be used for both L1 cache and shared
+memory. It can be configured as either 48 KB of shared memory and 16 KB of L1
+cache or as 16 KB of shared memory and 48 KB of L1 cache. We used the second
+option for the \textit{evaluation} algorithm in order to cache the accesses to
+local and global memory and also temporary register spills.
+
+For compilation, we used Cuda Toolkit 4.1 with flags ``-arch=sm\_20''.

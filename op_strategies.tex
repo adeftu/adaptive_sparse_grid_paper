@@ -1,11 +1,12 @@
 \section{Optimization Strategies}
+\label{sec:op_strategies}
 
-The computational core of \textit{fastsg} resides in \textit{hierarchize}, and
+The computational core of \textit{fastsg} resides in \textit{hierarchize} and
 \textit{evaluate} routines as presented in \cite{}. We will not enter here into
 the details of these procedures because a summary is already available in
 \cite{murarasu2011}. Instead, we present a set of optimizations for both of them
-in the context of GPUs. We group these optimizations into 3 categories based
-on their end purpose: memory locality, vectorization, and operations with
+in the context of CPUs and GPUs. We group these optimizations into 3 categories
+based on their end purpose: memory locality, vectorization, and operations with
 integers.
 
 \begin{algorithm}[tbp]
@@ -41,37 +42,35 @@ integers.
 }
 \end{algorithm}
 
-We start with a basic version of hierarchization algorithm where we loop with
-$t$ variable over all dimensions, with $g$ variable over all \textit{groups}
+We start with a basic version of hierarchization algorithm for GPU where we loop
+with $t$ variable over all dimensions, with $g$ variable over all \textit{groups}
 and then we call the kernel procedure. Each warp on the GPU computes the
 coefficients for one block of the sparse grid in order to achieve a better cache
 locality and to reduce the thread divergence within warps. Because the
 coefficients for one block are stored contiguously in memory, we also want for
 these values to be accessed simultaneously. Therefore, each thread within a warp
-starts reading at index equal to its lane index and then subsequently every
-element found at a distance multiple of 32 (the number of threads within a
-warp). In this way, a warp will access the memory contiguously at each read
-instruction. Here $l$ and $i$ are the levels and respectively index arrays
-which represent the coordinates of one point in the grid. We store them in the
-shared memory because they are frequently used. The routines \textit{left} and
-\textit{right} return the left and respectively right parents of a point in
-dimension $t$, while \textit{agp2idx} returns the index where point $(l, i)$ is
-stored in the 1d representation of the sparse grid, $asg1d$.
+starts reading at index equal to its lane and then subsequently every element
+found at a distance multiple of 32 (the number of threads within a warp). In
+this way, a warp will access the memory contiguously at each read instruction
+with an increased throughput. Here $l$ and $i$ are the levels and respectively
+index arrays which represent the coordinates of one point in the grid. We store
+them in the shared memory because they are frequently used. The routines
+\textit{left} and \textit{right} return the left and respectively right parents
+of a point in dimension $t$, while \textit{agp2idx} returns the index where
+point $(l, i)$ is stored in the 1d representation of the sparse grid, $asg1d$.
 
 We now optimize this basic algorithm and we start with optimizations for integer
 operations. The first observation we make is that computing the $l$ array for
 each point in the block is redundant because within a block, it has the same
 value. Therefore loop invariant code motion optimization (\textit{inv1}) moves
 the computation of $l$ outside the loop. Next, in \textit{inv2} we can compute
-the indices of all block that the current one depends on before the loop and
-store them in an array in the shared memory of a CUDA multiprocessor.
+the indices of all blocks that the current one depends on before the loop and
+store them in an array (in the heap space in the case of CPU implementation and
+in the shared memory of a CUDA multiprocessor for the GPU version).
 
 TODO. \textit{inv3}.
 
-\textit{inv4} completely removes the calls to \textit{left}, \textit{right} and
-\textit{agp2idx} routines by precomputing $l$ and $i$ for all dependencies of
-all blocks before the hierarchization algorithm, caching them in constant memory
-and simply fetching them when needed.
+TODO. \textit{inv4}.
 
 Lastly, in order to improve memory locality and the data access patterns,
 \textit{ichg1} optimization does a loop interchange by moving the loop over the
@@ -206,11 +205,12 @@ here is that the loop over dimensions on line 11 has a non-contiguous access
 pattern for a warp beacuse at each read instruction the threads within a
 warp access elements found at $D$ distance. \textit{vec1'} improves this by
 using a technique similar to the one we described for both
-\textit{hierarchization} and \textit{evaluation} algorithms for memory access by
-threads within a warp. More specific, \textit{vec1'} transposes the matrix $x$
-such that instead of storing the the points horizontally, one point per row, it
-stores them vertically in $x[(N/32+1) \cdot D][32]$. Thus, all threads in a warp
-access one row in this new matrix for each iteration over dimensions.
+\textit{hierarchization} and \textit{evaluation} algorithms for increasing
+the throughput through memory coalescing by threads within a warp. More
+specific, \textit{vec1'} transposes the matrix $x$ such that instead of storing
+the the points horizontally, one point per row, it stores them vertically in
+$x[(N/32+1) \cdot D][32]$. Thus, all threads in a warp access one row in this
+new matrix for each iteration over dimensions.
 
 Regarding memory locality, we present two optimizations, \textit{ichg2'} and
 \textit{ichg2''} which do a loop interchange by moving the loop over
