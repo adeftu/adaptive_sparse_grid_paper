@@ -28,6 +28,19 @@ with data, interpolation has to run as fast as possible. This is equivalent to
 ensuring that no processor in a heterogeneous system is idle at any moment of
 time and that each processor is used at its full potential.
 
+Fig.~\ref{fig:bigger_sparse_decomposed} shows that a sparse grid can be
+represented as a sequence of regular grids \cite{murarasu2011}, grouped by their
+norm into several refinement levels, which we'll call them \textit{groups} from
+now on. The grids in one \textit{group} will be referred as \textit{blocks}.
+Interpolating at a given D-dimensional point means traversing the set of regular
+grids and computing the contribution of each regular grid on the result. For
+each regular grid a D-linear basis function (\Otime{D}) is built and evaluated
+at the point. Interpolating at one point uses exactly one value from each
+regular grid for scaling the basis function. Using this knowledge, we can now
+look at the influence of the inputs on performance. All of these parameters
+influence to some extent the performance behavior of interpolation, especially
+on the GPU.
+
 Sparse grid interpolation has 5 input parameters: the number of dimensions (D),
 the refinement level (L), the number of interpolations (N), the precision (P)
 (single or double precision), and the adaptivity (A) (adaptive or regular). In
@@ -51,7 +64,15 @@ computational effort when using functions where not all input variables carry
 equal weight. Therefore, instead of storing all regular grids, we can exclude
 some of them when the information on those dimensions is not critical.
 
-TODO. picture adaptive sparse grids vs. regular sparse grids
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.48\textwidth]{adaptive_sparse_grid_deco_1.pdf}
+  \hspace{0cm}
+  \includegraphics[width=0.48\textwidth]{adaptive_sparse_grid_deco_2.pdf}
+  \caption{Decomposition of 2d sparse grid (left) and adaptive sparse grid
+  (right).}
+  \label{fig:adaptive_sparse_grid_deco}
+\end{figure}
 
 Our versions of interpolation are based on the iterative algorithm from
 \cite{murarasu2011} over which we applied a series of optimizations for both
@@ -64,8 +85,6 @@ GPU is not faster than the multi-core CPUs available in the system. This can be
 the case for instance with Intel's Sandy Bridge processors which have a SIMD
 unit~\cite{avx} (256~bit AVX) twice as wide as the previous generation, Nehalem
 (128~bit SSE).
-
-TODO. hierarchization and evaluation algorithms
 
 % The CPU version is optimized for best use of caches and vector units. Our GPU
 % implementation includes the following optimizations: coalesced memory accesses,
