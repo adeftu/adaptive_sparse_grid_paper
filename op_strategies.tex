@@ -53,7 +53,7 @@ starts reading at index equal to its lane and then subsequently every element
 found at a distance multiple of 32 (the number of threads within a warp). In
 this way, a warp will access the memory contiguously at each read instruction
 with an increased throughput. Here $l$ and $i$ are the levels and respectively
-index arrays which represent the coordinates of one point in the grid. We store
+index vectors which represent the coordinates of one point in the grid. We store
 them in the shared memory because they are frequently used. The routines
 \textit{left} and \textit{right} return the left and respectively right parents
 of a point in dimension $t$, while \textit{agp2idx} returns the index where
@@ -64,13 +64,26 @@ operations. The first observation we make is that computing the $l$ array for
 each point in the block is redundant because within a block, it has the same
 value. Therefore loop invariant code motion optimization (\textit{inv1}) moves
 the computation of $l$ outside the loop. Next, in \textit{inv2} we can compute
-the indices of all blocks that the current one depends on before the loop and
-store them in an array (in the heap space in the case of CPU implementation and
-in the shared memory of a CUDA multiprocessor for the GPU version).
+for each \textit{block} of norm $g$ the indices in $asg1d$ of all $g-1$
+\textit{blocks} that it depends on before the innermost loop. We store them in
+an array (in the heap space in the case of CPU implementation and in the shared
+memory of a CUDA multiprocessor for the GPU version). To get the values for
+these parent points, we can now use this array to index $asg1d$ and get the
+\textit{block} and what we still need is the index inside the \textit{block}.
+This is computed inside the $j$ loop by converting $i$ to the corresponding
+index.
 
-TODO. \textit{inv3}.
+\textit{inv3} starts from the observation that $\tilde{l}$ and $\tilde{i}$, the
+levels and respectively index vectors of the parents, differ from $l$ and $i$ of the
+current point only in one dimension. Therefore the conversion mentioned above is
+not necessary anymore, thus reducing the complexity from $O(D)$ to $O(1)$.
 
-TODO. \textit{inv4}.
+Now, in the innermost loop over the current \textit{block}, what is left to
+compute is the conversion $(l(t), i(t)) \rightarrow (\tilde{l}(t),
+\tilde{i}(t))$ which has a complexity of $O(l(t))$. \textit{inv4} precomputes
+the results of these conversions before the kernel launch and stores them in an
+array. The advantage is that the complexity of the innermost loop is now $O(1)$,
+but at a cost of higher memory footprint.
 
 Lastly, in order to improve memory locality and the data access patterns,
 \textit{ichg1} optimization does a loop interchange by moving the loop over the
@@ -222,9 +235,14 @@ improve read accesses by having the innermost loop as tight as possible over the
 block of memory.
 
 The last optimization is a combination of strength reduction and loop invariant
-code motion introduced in order to speed up integer operations. \textit{sred1'}
+code motion introduced in order to speed up integer operations. \textit{sred1}
 precomputes all divisions in lines 12-14 outside the innermost loop and replaces
-them with multiplications with the inverse.
+them with multiplications with the inverse. In addition, $idx1 \leftarrow
+idx1 \cdot 2^{l[t]} + \lfloor x[j][t] / 2^{l[t]} \rfloor$ from line 14 is
+replaced with $idx1 \leftarrow idx1 + \lfloor x[j][t] / 2^{l[t]} \rfloor
+\cdot 2^{prefix\_sums[t + 1]}$, where $prefix\_sums[p] = \sum_{p=t}^{D-1}l[p]$.
+This makes indexing a normal reduction and increases the instruction level
+parallelism.
 % 
 % \begin{algorithm}[tbp]
 % \small{
