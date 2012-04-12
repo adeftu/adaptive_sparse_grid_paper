@@ -4,9 +4,10 @@
 The computational core of \textit{fastsg} resides in \textit{hierarchize} and
 \textit{evaluate} routines. We will not enter here into the details of these
 procedures because a summary is already available in \cite{murarasu2011}.
-Instead, we present a set of optimizations for both of them in the context of
-CPUs and GPUs. We group these optimizations into 3 categories based on their end
-purpose: memory locality, vectorization, and operations with integers.
+Instead, we extend the set of loop transformations from \cite{murarasu2012} and
+present them in the context of CPUs and GPUs. We group these optimizations into
+3 categories based on their end purpose: memory locality, vectorization, and
+operations with integers.
 
 We start with a basic version of \textit{hierarchization} algorithm for GPU
 where we loop with $t$ variable over all dimensions, with $g$ variable over all
