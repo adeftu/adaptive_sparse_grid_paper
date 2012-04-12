@@ -217,17 +217,23 @@ traverse \textit{groups} and \textit{blocks} respectively. $\textit{idx23}$ is
 used to index the beginning of the current \textit{block} in $\textit{asg1d}$,
 while $idx1$ idexes the current point in this \textit{block}.
 
-We start with optimizations for a better vectorization. The observation we make
-here is that the loop over dimensions on line 11 has a non-contiguous access
-pattern for a warp beacuse at each read instruction the threads within a
-warp access elements found at $D$ distance. \textit{vec1'} improves this by
-using a technique similar to the one we described for both
-\textit{hierarchization} and \textit{evaluation} algorithms for increasing
-the throughput through memory coalescing by threads within a warp. More
-specific, \textit{vec1'} transposes the matrix $x$ such that instead of storing
-the the points horizontally, one point per row, it stores them vertically in
-$\tilde{x}[(N/32+1) \cdot D][32]$. Thus, all threads in a warp access one row in
-this new matrix for each iteration over dimensions.
+We start with optimizations for a better vectorization. For the CPU version,
+in \textit{vec1} we use loop unroll-and-jam, loop tiling and we vectorize the
+innermost loop $t$. Software pipelining can be done in the unrolled loop, but
+$x$ is accessed with stride-$D$ instead of stride-1. Therefore, we change the
+layout of $x$ such that $x[j][t] \rightarrow \tilde{x}[(j/\textit{m2}) \cdot D +
+t][j \bmod \textit{m2}]$, where $\textit{m2}$ is the size of the tile. Now, a
+stride-1 access on $\tilde{x}$ is possible which makes SSE vectorization
+efficient. For GPUs, the observation we make is that the loop over dimensions on
+line 11 has a non-contiguous access pattern for a warp because at each read
+instruction the threads within a warp access elements found at $D$ distance.
+\textit{vec1'} improves this by using a technique similar to the one we
+described for both \textit{hierarchization} and \textit{evaluation} algorithms
+for increasing the throughput through memory coalescing by threads within a
+warp. More specific, \textit{vec1'} transposes the matrix $x$ such that instead
+of storing the the points horizontally, one point per row, it stores them
+vertically in $\tilde{x}[(N/32+1) \cdot D][32]$. Thus, all threads in a warp
+access one row in this new matrix for each iteration over dimensions.
 
 Regarding memory locality, \textit{ichg2} does a loop interchange by moving the
 loop over interpolation points from line 2 inside the loop over \textit{blocks}
