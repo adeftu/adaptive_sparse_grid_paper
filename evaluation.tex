@@ -22,13 +22,78 @@ used \textit{Cuda Toolkit 4.1} with flags ``-arch=sm\_20''.
 We present the impact of our optimizations for both CPU and GPU implementations
 by measuring the GFlops rate and comparing with the reference baseline case
 where no optimizations were applied. We start with the results obtained for the
-\textit{hierarchization} algorithm, depicted in Fig.~\ref{}. We can see here
-that when applying all optimizations, a speedup of up to 8x is obtained. With
-the increase in the number of dimensions and the decrease of the sparse grid
-size, the speedup tends to decrease. This happens because most of the
-optimizations (e.g. improving caching and memory access patterns) are suitable
-for large grids.
+\textit{hierarchization} algorithm, depicted in Fig.~\ref{fig:hier_results}. We
+can see here that when applying all optimizations, a speedup of up to 34x is
+obtained for CPU and up to 8x for GPU compared to the respective baseline cases.
+With the increase in the number of dimensions and the decrease of the sparse
+grid size, the speedup for GPU tends to decrease. This happens because the
+effects of most of the optimizations (e.g. improving caching and memory access
+patterns) are visible when a high degree of parallelization is achieved,
+situation which happens in the case of large grids. Thus, this context is a good
+opportunity for the use of autotuning techniques in order to choose at runtime
+the right hardware in a heterogeneous system for running the algorithm. It is
+also interesting to notice that \textit{inv4} brings a drop of performance when
+applied on top of the other optimizations for CPU. This means that when the
+grids are smaller then it is better to actually do the computations instead of
+doing memory lookups, which may result in cache misses. Lastly, we show that a
+speedup of 17x is obtained for the most performant GPU version compared to the
+corresponding CPU-based one and a speedup of 6.2x compared to the state of the
+art GPU version \cite{murarasu2011}.
 
-Looking at the \textit{evaluation} algorithm, we observe a clear improvement
-brought by \textit{sred1'}. This shows that division instructions are very
-expensive, fact also confirmed by the Nvidia Programming Guide.
+\begin{figure}[h]
+\begin{center}
+\begin{minipage}[t]{\textwidth}%
+\vspace{0cm}%
+\begin{minipage}[c]{0.5\textwidth}%
+\vspace{0cm}%
+\begin{center}
+\subfloat[][CPU]{\label{fig:hier_cpu}\includegraphics[width=1\textwidth]{hier_cpu}}
+\end{center}
+\end{minipage}%
+\begin{minipage}[c]{0.5\textwidth}%
+\vspace{0cm}%
+\begin{center}
+\subfloat[][GPU]{\label{fig:hier_gpu}\includegraphics[width=1\textwidth]{hier_gpu}}
+\end{center}
+\end{minipage}%
+\end{minipage}%
+\end{center}
+\caption{Impact of optimizations on the performance of \textit{hierarchization}
+algorithm}
+\label{fig:hier_results}
+\end{figure}
+
+For the \textit{evaluation} algorithm, we used $10^{4}$ for CPU and $10^{6}$
+for GPU random points, uniformly distributed in the function domain. We
+empirically observed that for CPU the GFlops rate remains constant when
+increasing the number of interpolation points. The results of our tests are
+presented in Fig.~\ref{fig:eval_results}. Compared to the CPU versions, the
+optimizations for GPU are not that effective. The one which brings a clear
+speedup is \textit{sred1'} showing that division instructions are still very
+expensive on GPUs, fact also confirmed by the Nvidia Programming Guide. The GPU
+version is 28.3x faster than the CPU one which confirms that sparse grids
+interpolation technique is cache friendly and easily parallelizable using our
+data structure.
+
+\begin{figure}[h]
+\begin{center}
+\begin{minipage}[t]{\textwidth}%
+\vspace{0cm}%
+\begin{minipage}[c]{0.5\textwidth}%
+\vspace{0cm}%
+\begin{center}
+\subfloat[][CPU]{\label{fig:eval_cpu}\includegraphics[width=1\textwidth]{eval_cpu}}
+\end{center}
+\end{minipage}%
+\begin{minipage}[c]{0.5\textwidth}%
+\vspace{0cm}%
+\begin{center}
+\subfloat[][GPU]{\label{fig:eval_gpu}\includegraphics[width=1\textwidth]{eval_gpu}}
+\end{center}
+\end{minipage}%
+\end{minipage}%
+\end{center}
+\caption{Impact of optimizations on the performance of \textit{evaluation}
+algorithm}
+\label{fig:eval_results}
+\end{figure}

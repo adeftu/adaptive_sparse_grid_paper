@@ -28,43 +28,20 @@ with data, interpolation has to run as fast as possible. This is equivalent to
 ensuring that no processor in a heterogeneous system is idle at any moment of
 time and that each processor is used at its full potential.
 
-Fig.~\ref{fig:bigger_sparse_decomposed} shows that a sparse grid can be
+Fig.~\ref{fig:adaptive_sparse_grid_deco} shows that a sparse grid can be
 represented as a sequence of regular grids \cite{murarasu2011}, grouped by their
 norm into several refinement levels, which we'll call them \textit{groups} from
 now on. The grids in one \textit{group} will be referred as \textit{blocks}.
-Interpolating at a given D-dimensional point means traversing the set of regular
-grids and computing the contribution of each regular grid on the result. For
-each regular grid a D-linear basis function (\Otime{D}) is built and evaluated
-at the point. Interpolating at one point uses exactly one value from each
+Interpolating at a given $D$-dimensional point means traversing the set of
+regular grids and computing the contribution of each regular grid on the result. For
+each regular grid a $D$-linear basis function ($\Otime{D}$) is built and
+evaluated at the point. Interpolating at one point uses exactly one value from each
 regular grid for scaling the basis function. Using this knowledge, we can now
 look at the influence of the inputs on performance. All of these parameters
 influence to some extent the performance behavior of interpolation, especially
 on the GPU.
 
-Sparse grid interpolation has 5 input parameters: the number of dimensions (D),
-the refinement level (L), the number of interpolations (N), the precision (P)
-(single or double precision), and the adaptivity (A) (adaptive or regular). In
-this paper we concentrate on the first 3, these being the most important as they
-can take a wide range of values.
-
-D increases the computational intensity, i.e. the ratio between the on-chip
-computation time and off-chip communication time. On GPU, a large D causes an
-increased consumption of shared memory per thread reducing the benefits of
-multithreading. A large L decreases the computational intensity since the size
-of the regular grids increases exponentially, i.e. from $2^0$ to $2^{L-1}$. 
-
-As only one regular grid value is used per interpolation, only a small
-percentage of the compressed data transferred over PCIe to the GPU is actually
-used for computation. N is proportional to the computational intensity, i.e the
-more interpolations we perform, the more worthwhile is the data transfer over
-PCIe.
-
-The dimensional adaptivity parameter gives the possibility of reducing the
-computational effort when using functions where not all input variables carry
-equal weight. Therefore, instead of storing all regular grids, we can exclude
-some of them when the information on those dimensions is not critical.
-
-\begin{figure}[H]
+\begin{figure}[h]
   \centering
   \includegraphics[width=0.48\textwidth]{adaptive_sparse_grid_deco_1.pdf}
   \hspace{0cm}
@@ -73,6 +50,29 @@ some of them when the information on those dimensions is not critical.
   (right).}
   \label{fig:adaptive_sparse_grid_deco}
 \end{figure}
+
+Sparse grid interpolation has 5 input parameters: the number of dimensions
+($D$), the refinement level ($L$), the number of interpolations ($N$), the
+precision ($P$) (single or double precision), and the adaptivity ($A$) (adaptive
+or regular). In this paper we concentrate on the first 3, these being the most
+important as they can take a wide range of values.
+
+$D$ increases the computational intensity, i.e. the ratio between the on-chip
+computation time and off-chip communication time. On GPU, a large $D$ causes an
+increased consumption of shared memory per thread reducing the benefits of
+multithreading. A large $L$ decreases the computational intensity since the size
+of the regular grids increases exponentially, i.e. from $2^0$ to $2^{L-1}$. 
+
+As only one regular grid value is used per interpolation, only a small
+percentage of the compressed data transferred over PCIe to the GPU is actually
+used for computation. $N$ is proportional to the computational intensity, i.e
+the more interpolations we perform, the more worthwhile is the data transfer over
+PCIe.
+
+The dimensional adaptivity parameter gives the possibility of reducing the
+computational effort when using functions where not all input variables carry
+equal weight. Therefore, instead of storing all regular grids, we can exclude
+some of them when the information on those dimensions is not critical.
 
 Our versions of interpolation are based on the iterative algorithm from
 \cite{murarasu2011} over which we applied a series of optimizations for both
