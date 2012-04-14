@@ -61,20 +61,20 @@ representation of the sparse grid, $asg1d$.
 }
 \end{algorithm}
 
-We now optimize this basic algorithm and we start with optimizations for integer
+We now improve this basic algorithm and we start with optimizations for integer
 operations. The first observation we make is that computing the $l$ vector for
 each point in the \textit{block} is redundant because within a \textit{block},
 it has the same value. Therefore loop invariant code motion optimization
-\textit{inv1} moves the computation of $l$ outside the loop. 
+\textit{inv1} moves the computation of $l$ outside the $j$ loop. 
 
 Next, in \textit{inv2} we can compute for each \textit{block} of norm $g$ the
 indices in $asg1d$ of all $g-1$ parent \textit{blocks} before the innermost
 loop. We store them in an array (in the heap space in the case of CPU
 implementation and in the shared memory of a CUDA multiprocessor for the GPU
 version). To get the values for these parent points, we can now use this array
-to index $asg1d$ and get the \textit{block}. What we still need is the index
-inside the \textit{block}. This is computed inside the $j$ loop by converting
-$i$ to the corresponding index.
+to index $asg1d$ and get the start of the \textit{block}. What we still need is
+the index inside the \textit{block}. This is computed inside the $j$ loop by
+converting $i$ to the corresponding index.
 
 \textit{inv3} starts from the observation that $\tilde{l}$ and $\tilde{i}$, the
 \textit{levels} and respectively \textit{index} vectors of the parents, differ
@@ -237,10 +237,10 @@ access one row in this new matrix for each iteration over dimensions.
 
 Regarding memory locality, \textit{ichg2} does a loop interchange by moving the
 loop over interpolation points from line 2 inside the loop over \textit{blocks}
-from line 5. In the case of GPUs, we have two variations of this optimization.
-The first one, \textit{ichg2'} corresponds to \textit{ichg2} while the second
-one, \textit{ichg2''}, additionally moves the loops over \textit{groups}
-and \textit{blocks} outside the kernel. The goal of these optimizations is to
+from line 5. In the case of GPUs, we have two variations. The first one,
+\textit{ichg2'} corresponds to \textit{ichg2} while the second one,
+\textit{ichg2''}, additionally moves the loops over \textit{groups} and
+\textit{blocks} outside the kernel. The goal of these optimizations is to
 improve read accesses by having the innermost loop as tight as possible over the
 block of memory.
 

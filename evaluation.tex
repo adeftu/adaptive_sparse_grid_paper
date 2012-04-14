@@ -1,23 +1,22 @@
 \section{Evaluation}
 
 In this section we present the results obtained for both CPU and GPU
-implementations and analyze the speedup obtained with the optimizations
-described in Section~\ref{sec:op_strategies}.
+implementations and analyze the speedup obtained when applying the
+optimizations described in Section~\ref{sec:op_strategies}.
 
 Our test system is a quad-core Intel Core i7-920 running at 2.67 GHz with
 Hyper-threading enabled. For compilation we used \textit{gcc 4.6} with flags
-``-O3 -march=native -funroll-loops -fargument-noalias -fopenmp''.
-
-The GPU cards used were GeForce GTX 480 of from Nvidia (Fermi architecture)
-having 1.5 GB of total memory and 15 multiprocessors each with 32 cores
-operating at a clock speed of 1.4 GHz. An important observation to make is that
-the device supports CUDA Capability 2.0 which, among other features, includes
-the possibility for the same on-chip memory to be used for both L1 cache and shared
-memory. It can be configured as either 48 KB of shared memory and 16 KB of L1
-cache or as 16 KB of shared memory and 48 KB of L1 cache. We used the second
-option for the \textit{evaluation} algorithm in order to cache the accesses to
-local and global memory and also temporary register spills. For compilation, we
-used \textit{Cuda Toolkit 4.1} with flags ``-arch=sm\_20''.
+``-O3 -march=native -funroll-loops -fargument-noalias -fopenmp''. The GPU cards
+used were GeForce GTX 480 of from Nvidia (Fermi architecture) having 1.5 GB of
+total memory and 15 multiprocessors each with 32 cores operating at a clock
+speed of 1.4 GHz. An important observation to make is that the device supports
+CUDA Capability 2.0 which, among other features, includes the possibility for
+the same on-chip memory to be used for both L1 cache and shared memory. It can
+be configured as either 48 KB of shared memory and 16 KB of L1 cache or as 16 KB
+of shared memory and 48 KB of L1 cache. We used the second option for the
+\textit{evaluation} algorithm in order to cache the accesses to local and global
+memory and also temporary register spills. For compilation, we used
+\textit{Cuda Toolkit 4.1} with flags ``-arch=sm\_20''.
 
 We present the impact of our optimizations for both CPU and GPU implementations
 by measuring the GFlops rate and comparing with the reference baseline case
@@ -68,12 +67,15 @@ for GPU random points, uniformly distributed in the function domain. We
 empirically observed that for CPU the GFlops rate remains constant when
 increasing the number of interpolation points. The results of our tests are
 presented in Fig.~\ref{fig:eval_results}. Compared to the CPU versions, the
-optimizations for GPU are not that effective. The one which brings a clear
-speedup is \textit{sred1'} showing that division instructions are still very
-expensive on GPUs, fact also confirmed by the Nvidia Programming Guide. The GPU
-version is 28.3x faster than the CPU one which confirms that sparse grids
-interpolation technique is cache friendly and easily parallelizable using our
-data structure.
+optimizations for GPU are not that effective. The main reason for this is that
+giving the high memory requirement for storing the interpolation points, we used
+the GPU main memory. Although caching is performed, we believe that a higher
+throughput could be obtained if we could have stored the results in shared
+memory. The optimization which brings a clear speedup is \textit{sred1} showing
+that division instructions are still very expensive on GPUs, fact also confirmed
+by the Nvidia Programming Guide. The GPU version is 28.3x faster than the CPU
+one which confirms that sparse grids interpolation technique is cache friendly
+and easily parallelizable using our data structure.
 
 \begin{figure}[h]
 \begin{center}
