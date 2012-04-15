@@ -36,73 +36,66 @@ using CUDA terms and provide some brief guidelines for programming Nvidia cards.
 
 \subsection{GPU Architecture}
 
-In contrast to CPUs which use the die space for complex control logic and large
-caches, GPUs devote a higher percentage of transistors to floating point units.
-GPUs provide massive parallelism and deliver better performance than CPUs
-especially for applications with regular access patterns, e.g. dense matrix
-operations \cite{volkov2008}.
+GPUs don't have the complexity of the CPUs in terms of architectural
+improvements for smart control logic, like branch prediction or speculative
+execution. Instead they are heavily optimized for fast arithmetic operations and
+in consequence have many dedicated floating point units. Therefore, an important
+note to make is that not all applications are suitable for running on GPUs, or
+at least not as efficient as on CPUs, but only those that exhibit regular memory
+access pattern and require a great amount of computational power.
 
-In the following we focus on the GeForce GTX 480 model of Nvidia Fermi.
-This is a high-end GPU which contains 15 32-way SIMD units called by Nvidia
-Streaming Multiprocessors (SM). In Nvidia terminology, each way is called a
-Scalar Processor (SP). Each thread is generally executed on one of the 32 ways
-of the SIMD unit. One of the main characteristics of Nvidia GPUs is multithreading
-which offers the possibility to hide the latency originating from various
-instructions, especially the latency caused by loads from and stores to RAM, by
-executing a large number of threads concurrently with a low cost per context
-switch.
+The CUDA architecture from Nvidia is based on \textit{Streaming Multiprocessors}
+(SM), which are SIMD units with the role of creating, scheduling and executing
+concurrent threads. One such multiprocessor is composed of several
+\textit{Scalar Processors} (SP) and has a dedicated shared memory for fast
+access by the threads running on it. The thread-execution manager automatically
+schedules threads on processors without need from the programmer for writing
+explicit code for this. The execution is done in groups of 32 threads, called
+\textit{warps}, such that every instruction is broadcasted synchronously to all
+the active threads in a \textit{warp}. The degree of parallelism is high when
+all these 32 threads execute the same instruction and very low when thread
+divergence occurs caused by branching. This is an important factor to consider
+when writing code for GPUs with performance in mind.
 
-Nvidia GPUs are SIMD based architectures. Each SM control unit creates, manages
-and executes synchronously the threads in groups of 32 called warps. Every
-instruction is broadcasted synchronously to all the active threads in a warp.
-Branching may cause threads in the same warp to follow different execution
-paths. This type of behavior of the threads inside a warp is called diverge. It
-has the potential to severely reduce the performance of a GPU application, up to
-a factor of 32.
-
-GPUs have their own dedicated RAM, global memory, which is in the order of
-several Gigabytes, e.g. GeForce GTX 480 has 1.5 GB of DDR3 memory. For
-performance, GPUs are also equipped with multiple fast memories on the chip:
-constant cache, texture cache and shared memory \cite{ryo2008}. The properties
-of these fast memories vary in terms of latency, bandwidth and usage. The
-constant cache is a read-only cache and, according to \cite{won2010}, its
-level-1 has the lowest latency among the memories on the GPU. The texture cache
-is a read-only memory used for optimizing the bandwidth rather than latency,
-i.e. its latency is comparable with the one of the global memory. Finally, the
-shared memory is a low latency, read-write memory, is private per SM and
-controlled explicitly by the programmer.
-
+The memory hierarchy is also different. Each thread has a small local private
+memory and each \textit{block} has a shared memory accessible by all threads in
+the \textit{block}. Specifically designed for graphics processing, the cards are
+also equipped with read-only, fast, on-chip memories like constant and texture
+caches which are used for different purposes. For example the first one is
+optimized for latency, while the second one for bandwidth. Finally, there is
+also the global memory which has the biggest capacity, but is the slowest among
+all. Starting with the Fermi architecture, a finer level of control is possible
+for configuring how the allocations of these memories is done for the
+\textit{kernels}, giving the programmer more flexibility, but with the cost of
+exposing details and complexities of the underlying architecture.
 
 \subsection{GPU Programming}
 
-CUDA is one of the available frameworks for programming Nvidia GPUs. From a
-programming point of view, a CUDA application has a CPU and a GPU part. The main
-responsibilities of the CPU part are: allocating memory  on the GPU,
-transferring data to and from the GPU over PCI Express and launching the GPU
-program called kernel. A kernel cannot contain recursive functions. Each
-instance of a kernel is executed by a thread. Besides being packed in warps, the
-threads are also grouped in blocks of threads. This grouping is important as
-only the threads inside a block can synchronize via barriers
-(\emph{\_\_syncthreads}) and share data from the shared memory. Each thread has
-a 2d block identifier (\emph{blockIdx}) and a 3d thread identifier
-(\emph{threadIdx}). Combining the block and the thread identifiers offers the
-means to uniquely identify a thread on the GPU and to assign its part from the
-workload to be computed on the GPU.
+Nvidia GPUs can be programmed through their dedicated framework, called CUDA.
+CUDA allows the programmer to define functions (\textit{kernels}) to be executed
+in parallel by many threads on different processors. When the \textit{kernels}
+are launched on the GPU, a given topology must be specified. Threads are
+grouped in \textit{thread blocks} which are laid in a grid. Each \textit{thread
+block} has an unique 2d index which gives its position in the grid, while each
+thread has a 3d index identifying the thread in a \textit{block}. This aspect
+allows uni-dimensional, bi-dimensional, and three-dimensional topologies, the
+right configuration being chosen depending on the problem to be solved. Threads
+in a \textit{block} are scheduled to be run on a single SM, fact that allows
+only the synchronization among the threads from a single \textit{block} using
+the \emph{\_\_syncthreads} barrier. Also, these threads can share data among
+themselves through the shared memory of the SM.
 
-A first optimization for GPU programs consists of the proper exploitation of
-multithreading. This is equivalent to maximizing the number of active threads
-and can be achieved by reducing the register file and shared memory consumption
-per thread. Second, efficient use of the memory hierarchy can provide a
-substantial speedup to GPU applications. This optimization includes at least:
-enabling coalesced accesses to global memory in order to reduce the number of
-memory transactions, using the fast memories on-chip and reducing the number of
-bank conflicts caused by accessing the shared memory. Third, divergent branches
-can serialize the execution of the threads composing a warp. To improve the
-performance, the number of divergent branches needs to be minimized. Note that
-these are the optimizations which proved to be relevant to our application and
-they represent only a subset of the optimizations applicable to CUDA
-applications. For a detailed list of optimizations we refer the reader to
-\cite{cuda}.
+Usually when choosing to write code for GPUs, performance is the most important
+reason for this decision. Optimizations address mostly thread scheduling and
+memory access. In the first category the most important ones are choosing the
+right topology when launching the \textit{kernel}, thus maximizing the number of
+active threads per SM, and trying to avoid or at least minimize the number of
+divergent branches that could lead to a serial execution of threads composing a
+\textit{warp}. Regarding memory hierarchy, it is preferable to use the faster 
+on-chip memories whenever possible, to reduce the number of bank conflicts when
+accessing the shared memory and to reduce the number of memory transactions to
+main memory through coalescing. We applied these optimizations to our
+application, but for a detailed list we refer the reader to \cite{cuda}.
 
 % The number of active threads is not the same for all applications. An
 % optimization direction for GPU programs consists in maximizing the number of
