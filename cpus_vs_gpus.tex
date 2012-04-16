@@ -54,7 +54,7 @@ explicit code for this. The execution is done in groups of 32 threads, called
 \textit{warps}, such that every instruction is broadcasted synchronously to all
 the active threads in a \textit{warp}. The degree of parallelism is high when
 all these 32 threads execute the same instruction and very low when thread
-divergence occurs caused by branching. This is an important factor to consider
+divergence caused by branching occurs. This is an important factor to consider
 when writing code for GPUs with performance in mind.
 
 The memory hierarchy is also different. Each thread has a small local private
@@ -63,7 +63,7 @@ the \textit{block}. Specifically designed for graphics processing, the cards are
 also equipped with read-only, fast, on-chip memories like constant and texture
 caches which are used for different purposes. For example the first one is
 optimized for latency, while the second one for bandwidth. Finally, there is
-also the global memory which has the biggest capacity, but is the slowest among
+also the global memory which has the largest capacity, but is the slowest among
 all. Starting with the Fermi architecture, a finer level of control is possible
 for configuring how the allocations of these memories is done for the
 \textit{kernels}, giving the programmer more flexibility, but with the cost of
