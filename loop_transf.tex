@@ -173,79 +173,79 @@ inhibitors have to be addressed by the programmer. Note that the computation and
 memory access patterns from these examples are similar to the patterns from
 \textit{fastsg}'s routines.
 
-\floatname{algorithm}{Example}
-\setcounter{algorithm}{0}
-
-\begin{figure}[tbp]
-\begin{minipage}[t]{\textwidth}%
-\vspace{0cm}%
-\begin{minipage}[c]{0.32\textwidth}%
-\vspace{0cm}%
-\begin{center}
-\begin{algorithm}[H]
-\small{
-%\caption{Loop example 1.}
- \caption{}
- \label{alg:example1}                       
- \begin{algorithmic}[1]
-    \For{$i=1$ to $m$}
-		\For{$j=1$ to $n$}
-			\State $a[i] \leftarrow \text{op}(a[i], b[j], c[j])$
-		\EndFor
-    \EndFor
- \end{algorithmic}
-}
-\end{algorithm}
-\end{center}
-\end{minipage}%
-\hfill
-\begin{minipage}[c]{0.32\textwidth}%
-\vspace{0cm}%
-\begin{center}
-\begin{algorithm}[H]
-\small{
-% \caption{Loop example 2, a specialization of Alg.~\ref{alg:example1}.}
- \caption{A specialization of Ex.~\ref{alg:example1}.}
- \label{alg:example2}                       
- \begin{algorithmic}[1]
-    \For{$i=1$ to $m$}
-		\For{$j=1$ to $n$}
-			\State $a[i] \leftarrow a[i] \cdot b[j] + c[j]$
-		\EndFor
-    \EndFor
- \end{algorithmic}
-}
-\end{algorithm}
-\end{center}
-\end{minipage}%
-\hfill
-\begin{minipage}[c]{0.32\textwidth}%
-\vspace{0cm}%
-\begin{center}
-\begin{algorithm}[H]
-\small{
-% \caption{Loop example 3.}
- \caption{}
- \label{alg:example3}                       
- \begin{algorithmic}[1]
-    \For{$i=1$ to $m$}
-		\For{$j=1$ to $n$}
-			\For{$k=1$ to $p$}
-				\State $a[i] \leftarrow a[i] \cdot b[j][k] + c[i][k]$
-				\State $d[i] \leftarrow d[i] \cdot e[i][k] + f[j][k]$
-			\EndFor
-		\EndFor
-    \EndFor
- \end{algorithmic}
-}
-\end{algorithm}
-\end{center}
-\end{minipage}%
-\end{minipage}%
-\end{figure}
-
-\setcounter{algorithm}{1}
-\floatname{algorithm}{Algorithm}
+% \floatname{algorithm}{Example}
+% \setcounter{algorithm}{0}
+% 
+% \begin{figure}[tbp]
+% \begin{minipage}[t]{\textwidth}%
+% \vspace{0cm}%
+% \begin{minipage}[c]{0.32\textwidth}%
+% \vspace{0cm}%
+% \begin{center}
+% \begin{algorithm}[H]
+% \small{
+% %\caption{Loop example 1.}
+%  \caption{}
+%  \label{alg:example1}                       
+%  \begin{algorithmic}[0]
+%     \For{$i=1$ to $m$}
+% 		\For{$j=1$ to $n$}
+% 			\State $a[i] \leftarrow \text{op}(a[i], b[j], c[j])$
+% 		\EndFor
+%     \EndFor
+%  \end{algorithmic}
+% }
+% \end{algorithm}
+% \end{center}
+% \end{minipage}%
+% \hfill
+% \begin{minipage}[c]{0.32\textwidth}%
+% \vspace{0cm}%
+% \begin{center}
+% \begin{algorithm}[H]
+% \small{
+% % \caption{Loop example 2, a specialization of Alg.~\ref{alg:example1}.}
+%  \caption{A specialization of Ex.~\ref{alg:example1}.}
+%  \label{alg:example2}                       
+%  \begin{algorithmic}[0]
+%     \For{$i=1$ to $m$}
+% 		\For{$j=1$ to $n$}
+% 			\State $a[i] \leftarrow a[i] \cdot b[j] + c[j]$
+% 		\EndFor
+%     \EndFor
+%  \end{algorithmic}
+% }
+% \end{algorithm}
+% \end{center}
+% \end{minipage}%
+% \hfill
+% \begin{minipage}[c]{0.32\textwidth}%
+% \vspace{0cm}%
+% \begin{center}
+% \begin{algorithm}[H]
+% \small{
+% % \caption{Loop example 3.}
+%  \caption{}
+%  \label{alg:example3}                       
+%  \begin{algorithmic}[0]
+%     \For{$i=1$ to $m$}
+% 		\For{$j=1$ to $n$}
+% 			\For{$k=1$ to $p$}
+% 				\State $a[i] \leftarrow a[i] \cdot b[j][k] + c[i][k]$
+% 				\State $d[i] \leftarrow d[i] \cdot e[i][k] + f[j][k]$
+% 			\EndFor
+% 		\EndFor
+%     \EndFor
+%  \end{algorithmic}
+% }
+% \end{algorithm}
+% \end{center}
+% \end{minipage}%
+% \end{minipage}%
+% \end{figure}
+% 
+% \setcounter{algorithm}{1}
+% \floatname{algorithm}{Algorithm}
 
 In Ex.~\ref{alg:example1} we can see a nest of two loops. We discuss in this
 context about loop interchange. For best cache exploitation, we want to have as
@@ -261,6 +261,20 @@ optimizations.
 % Note that we do not consider in our discussion scenarios in which the
 % computation depends on the actual content of the data.
 
+\begin{algorithm}[h]
+\small{
+	\caption{}
+	\label{alg:example1}                       
+ 	\begin{algorithmic}[0]
+    	\For{$i=1$ to $m$}
+			\For{$j=1$ to $n$}
+				\State $a[i] \leftarrow \text{op}(a[i], b[j], c[j])$
+			\EndFor
+    	\EndFor
+ 	\end{algorithmic}
+}
+\end{algorithm}
+
 In Ex.~\ref{alg:example2} we use the same reasoning based on the values of $m$
 and $n$. If $m \gg n$, the loops do not swap places. In the current form, the
 innermost loop cannot be vectorized. To vectorize this loop, we perform loop
@@ -271,6 +285,20 @@ the innermost loop, and after unrolling it using a factor of 4 for SSE (or 8 for
 AVX) can be easily vectorized. In the second case,  $m \ll n$, interchanging the
 $i$ and $j$ loops results in correct exploitation of both caches and vector
 units.
+
+\begin{algorithm}[h]
+\small{
+	\caption{}
+ 	\label{alg:example2}                       
+ 	\begin{algorithmic}[0]
+    	\For{$i=1$ to $m$}
+			\For{$j=1$ to $n$}
+				\State $a[i] \leftarrow a[i] \cdot b[j] + c[j]$
+			\EndFor
+    	\EndFor
+ 	\end{algorithmic}
+}
+\end{algorithm}
 
 Ex.~\ref{alg:example2} has \Otime{m \cdot n} complexity. In this particular
 example we can reduce the complexity to \Otime{m + n}. Let us observe first that
@@ -309,6 +337,23 @@ and vectorization unfriendly data layout. Note that vectorization can also be
 achieved through unroll-and-jam applied to the initial loop $i$ after the
 permutation. Nevertheless, these are solutions difficult to implement by a
 compiler.
+
+\begin{algorithm}[h]
+\small{
+	\caption{}
+ 	\label{alg:example3}                       
+ 	\begin{algorithmic}[0]
+    	\For{$i=1$ to $m$}
+			\For{$j=1$ to $n$}
+				\For{$k=1$ to $p$}
+					\State $a[i] \leftarrow a[i] \cdot b[j][k] + c[i][k]$
+					\State $d[i] \leftarrow d[i] \cdot e[i][k] + f[j][k]$
+				\EndFor
+			\EndFor
+    	\EndFor
+ 	\end{algorithmic}
+}
+\end{algorithm}
 
 With this introduction in human - compiler collaborative tuning, we move to the
 next part of the paper that describes the strategy taken for optimizing
