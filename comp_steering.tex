@@ -12,21 +12,23 @@ resulting from simulations \cite{butnaru2011}. It is a well known fact that
 managing the data coming from functions with high number of dimensions has an
 exponential complexity on the number of dimensions. Therefore, we compress the
 data using the sparse grid technique in order to reduce its size and we
-decompress it afterwards for real-time visualization. 
+decompress it afterwards for real-time visualization. For this purpose we use
+the \textit{fastsg} library presented in \cite{murarasu2012}.
 
 Compressing a general function represented on a full grid is done by selecting
 only the function values at grid points also contained in a sparse grid. This is
 reduced to computing the hierarchical coefficients, process called
-hierarchization. Decompression (or interpolation) refers to evaluating the
-function anywhere inside the domain by summing up the contributions of the basis
-functions averaged by their hierarchical coefficients. This technique also
-enables us to interpolate at points for which we do not have values from
-simulation. Hence, it can provide hints on the simulation outside the initial
-data. In our case, decompression is a form of interpolation based on the sparse
-grid technique described in \cite{bungartz2004}. To allow a fluent interaction
-with data, interpolation has to run as fast as possible. This is equivalent to
-ensuring that no processor in a heterogeneous system is idle at any moment of
-time and that each processor is used at its full potential.
+\textit{hierarchization}. Decompression (or \textit{interpolation}) refers to
+evaluating the function anywhere inside the domain by summing up the
+contributions of the basis functions averaged by their hierarchical
+coefficients. This technique also enables us to interpolate at points for which
+we do not have values from simulation. Hence, it can provide hints on the
+simulation outside the initial data. In our case, decompression is a form of
+interpolation based on the sparse grid technique described in
+\cite{bungartz2004}. To allow a fluent interaction with data, interpolation has
+to run as fast as possible. This is equivalent to ensuring that no processor in
+a heterogeneous system is idle at any moment of time and that each processor is
+used at its full potential.
 
 Fig.~\ref{fig:adaptive_sparse_grid_deco} shows that a sparse grid can be
 represented as a sequence of regular grids \cite{murarasu2011}, grouped by their
