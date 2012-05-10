@@ -18,9 +18,9 @@ vendors. Compute Unified Device Architecture (CUDA) is an option for programming
 Nvidia GPUs. The vector units are not directly visible in CUDA. Indirectly, the
 SIMD nature of GPUs reveals itself when applying various optimizations, e.g. for
 bank conflicts and memory access coalescing. This view of GPUs as vector
-processors is at the foundation of Volkov's paper on optimizing matrix
-multiplication \cite{volkov2008}. His tuning strategy was afterwards included in
-the \textit{cublas} library from Nvidia.
+processors is at the foundation of \cite{volkov2008}. The tuning strategy
+presented there was afterwards included in the \textit{cublas} library from
+Nvidia.
 
 % CUDA can be misleading when referring to the architecture. Of course, a
 % trade-off should be clarified at this point. It does what it does to simplify
@@ -80,7 +80,7 @@ as a vector processors. The main contributions of our paper are as follows:
   transformations for two different architectures, CPUs and GPUs. We describe
   the challenges met along the way and their solutions.
   \item We report speedup results that, for the considered computational
-  steering application, accelerate the state of the art implementation up to a
+  steering application, accelerate the state-of-the-art implementation up to a
   factor of 6.2x.
 \end{itemize}
 

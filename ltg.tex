@@ -1,22 +1,17 @@
-%\documentclass[a4paper, 10pt]{llncs}
-\documentclass{llncs}
+\documentclass[10pt, conference]{IEEEtran}
 
 \usepackage{graphicx}
 \usepackage{indentfirst}
 \usepackage{subfig}
 \usepackage{amssymb}
-\usepackage{amsmath}
-% \usepackage{amsthm}
+\usepackage[cmex10]{amsmath}
 
 \usepackage{algorithm}
 \usepackage{algpseudocode}
 \usepackage{setspace}
-%\usepackage[hmargin=2.63cm,vmargin=2.63cm]{geometry}
-%\usepackage[hmargin=2.42cm,vmargin=2.42cm]{geometry}
 \usepackage{url}
 \usepackage{cite}
-
-% \doublespacing
+\usepackage[utf8x]{inputenc}
 
 \graphicspath{{./img/}}
 
@@ -24,17 +19,15 @@
 
 \begin{document}
 
-% \title{Fast Sparse Grid Interpolation on Heterogeneous Machines}
-% \title{Addressing the Grain Size Problem on Heterogeneous Systems: A Case Study of Sparse Grid Interpolation}
 \title{Evaluation of Optimization Strategies for fastsg on Heterogeneous Systems}
-\author{}
-\institute{}
-
-% \author{Alin Murara\c{s}u \and Andrei Deftu \and Josef Weidendorfer}
-% \institute{Technische Universit\"{a}t M\"{u}nchen, \\
-% \email{\{murarasu,deftu,weidendo\}@in.tum.de}}
-
-\date{}
+\author{\IEEEauthorblockN{Andrei Deftu}
+\IEEEauthorblockA{Technische Universität München\\
+andrei.deftu@in.tum.de}
+\and
+\IEEEauthorblockN{Alin Murărașu}
+\IEEEauthorblockA{Technische Universität München\\
+murarasu@in.tum.de}
+}
 
 \maketitle
 
@@ -51,7 +44,7 @@ experience with implementing fastsg's time critical routines for Intel CPUs and
 Nvidia Fermi GPUs. We show the differences and especially the similarities
 between our optimization strategies for the two architectures. With regard to
 our test case for which achieving high speedups is a ``must'' for real-time
-visualization, we report a speedup of up to 6.2 times compared to the
+visualization, we report a speedup of up to 6.2x times compared to the
 state-of-the-art implementation of the sparse grid technique for GPUs.
 \end{abstract}
 
