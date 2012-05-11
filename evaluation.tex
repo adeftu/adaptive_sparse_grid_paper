@@ -8,7 +8,7 @@ Our test system is a quad-core Intel Core i7-920 running at 2.67 GHz with
 Hyper-threading enabled. For compilation we used \textit{gcc 4.6} with flags
 ``-O3 -march=native -funroll-loops -fargument-noalias -fopenmp''. The GPU cards
 used were GeForce GTX 480 of from Nvidia (Fermi architecture) having 1.5 GB of
-total memory and 15 multiprocessors each with 32 cores operating at a clock
+total memory and 15 multiprocessors each with 32 lanes operating at a clock
 speed of 1.4 GHz. An important observation to make is that the device supports
 CUDA Capability 2.0 which, among other features, includes the possibility for
 the same on-chip memory to be used for both L1 cache and shared memory. It can

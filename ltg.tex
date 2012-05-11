@@ -78,6 +78,14 @@ state-of-the-art implementation of the sparse grid technique for GPUs.
 % the previous work refers to regular sparse grids
 
 
+
+\input{cpus_vs_gpus}
+% our goal: to speedup our application on gpus
+
+% cpus = latency oriented
+% gpus = throughput oriented
+
+
 \input{comp_steering}
 % based on the sparse grid technique for compressing / decompressing simulation data
 % the algorithms which we optimize were covered in murarasu@ppopp'2011
@@ -91,14 +99,6 @@ state-of-the-art implementation of the sparse grid technique for GPUs.
 % hierarchization means computing the hierarchical coefficients corresponding to basis functions (= building the approximation)
 % evaluation of the approximation at any given point inside the domain means summing up the contributions of the basis functions (= interpolation)
 % img.: dimensionally adaptive sparse grids vs. regular sparse grids
-
-
-\input{cpus_vs_gpus}
-% our goal: to speedup our application on gpus
-
-% cpus = latency oriented
-% gpus = throughput oriented
-
 
 \input{loop_transf}
 % show an example with a loop nest
