@@ -63,44 +63,52 @@ by the hardware, and those that decrease the number of instructions executed.
 A developer that aims at obtaining maximum performance from an architecture
 should not rely solely on the compiler for optimizations. Based on their
 purpose, we group these optimizations into several categories. The first one
-icludes transformations which improve memory locality. In defense of this
-statement, we refer to the loop tiling. Loop tiling is a loop reordering
-transformation primarily used to improve cache reuse. In loop tiling, the
+includes transformations which improve memory locality. In defense of this
+statement, we refer to the loop tiling. \textit{Loop tiling} is a loop
+reordering transformation primarily used to improve cache reuse. In loop tiling, the
 iteration space is divided in tiles. The transformation is highly dependent on
-the memory hierarchy. Aggressive tiling is done for all the levels of memory,
-including registers, Level-1 cache, Level-2 cache, etc. The complexity of caches
-complicates compiler's task to produce efficient loop tiling transformations.
+the memory hierarchy. If we take the case of GPUs, where each multiprocessor
+possesses a cache, the tile can be chosen in such manner that it fits into the
+cache, which would allow to assign one or more tiles to each microprocessor.
+Aggressive tiling is done for all the levels of memory, including registers,
+Level-1 cache, Level-2 cache, etc. The complexity of caches complicates
+compiler's task to produce efficient loop tiling transformations.
 This is actually what motivates the existence of auto-tuners that aim to better
-match tile sizes with the memory levels. In the same category of loop
-transformations that enhance locality, there is also loop interchange. This is a
-transformation that exchanges the position of two loops so that the access to
-memory is improved, i.e. fewer cache and TLB misses. Sometimes, because the
-number of iterations of a loop is not known at compile time, the compiler cannot
-determine the best permutation of loops. Complex data dependencies resulting
-from complex array subscripts can also limit the applicability of this
-optimization since the compiler needs to prove that a given optimization
-preserves the semantics of the unoptimized code. This is actually a general rule
-followed by all compiler transformations.
+match tile sizes with the memory levels. An example of application for this
+kind of transformation on GPUs is stencil codes \cite{volkov2010}. In the same
+category of loop transformations that enhance locality, there is also
+\textit{loop interchange}. This is a transformation that exchanges the position
+of two loops so that the access to memory is improved, i.e. fewer cache and TLB
+misses. Sometimes, because the number of iterations of a loop is not known at
+compile time, the compiler cannot determine the best permutation of loops.
+Complex data dependencies resulting from complex array subscripts can also limit
+the applicability of this optimization since the compiler needs to prove that a
+given optimization preserves the semantics of the unoptimized code. This is
+actually a general rule followed by all compiler transformations. A study about
+automatic loop interchange on GPUs was presented in
+\cite{Leung:2009:APG:1596655.1596670}.
 
 Among the loop restructuring transformations that increase the instruction
 parallelism we find loop unrolling, loop unroll-and-jam, and software
-pipelining. Loop unrolling replicates the body of a loop a number of times
-referred to as the unrolling factor. This optimization also reduces the loop
+pipelining. \textit{Loop unrolling} replicates the body of a loop a number of
+times referred to as the unrolling factor. This optimization also reduces the loop
 overhead and can improve the register, cache, and TLB locality. Another
 advantage is that more possibilities for reordering instructions are available,
 thus resulting in a better utilization of the instruction pipeline. The main
 disadvantage comes from increased size of the compiler generated code which puts
-more pressure on the instruction cache. Loop unroll-and-jam is similar to unroll
-in the sense that it copies the body of one of the next inner loops some number
+more pressure on the instruction cache. \textit{Loop unroll-and-jam} is similar
+to unroll in the sense that it copies the body of one of the next inner loops some number
 of times equal to the unroll-and-jam factor. The generated inner loops are then
 fused together (or jammed). This transformation can lead to more independent
-instructions in the inner loop. Software pipelining implies reordering
+instructions in the inner loop. \textit{Software pipelining} implies reordering
 instructions from different iterations of a loop such that independent
 instructions are executed in sequence. This transformation is often used in
-combination with loop unrolling.
+combination with loop unrolling. Some examples of applications which employ
+these kinds of transformations are matrix multiplication and symmetric matrix
+vector product (SYMV) \cite{Nath:2011:OSD:2063384.2063392}.
 
-In the recent period, vectorization has been gaining increased attention from
-developers. The current generation of processors from Intel, Sandy Bridge,
+In the recent period, \textit{vectorization} has been gaining increased
+attention from developers. The current generation of processors from Intel, Sandy Bridge,
 contains 8-lane SIMD units (AVX), providing two times more throughput than the
 previous 4-lane SIMD units (SSE). Developers are interested to make use of the
 potential 8-fold speedup. In theory this can be achieved through vectorization
@@ -127,8 +135,8 @@ required to cope with the vectorization inhibitors. We refer the reader to
 % A detailed guide for vectorization using \textit{icc} is available in
 % \cite{vec_guide}.
 
-Another important loop transformation is loop invariant code motion. This is a
-data-flow based loop transformation that moves outside a loop the computation
+Another important loop transformation is \textit{loop invariant code motion}.
+This is a data-flow based loop transformation that moves outside a loop the computation
 whose result does not modify between iterations.
 % In such a case, the computation can be moved outside the loop, thus decreasing
 % the number of instructions executed.
