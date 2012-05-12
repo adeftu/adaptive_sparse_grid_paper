@@ -54,11 +54,12 @@
 Most optimizations applied to numerical codes focus on loops since these are the
 places where most of the execution time is spent. In general, we expect the
 compiler to handle loop transformations. An overview of loop transformations
-performed by the compiler is presented in \cite{bacon1994}. We cover in our
-paper only a subset of those optimizations relevant for our discussion and our
-routines. Specifically, we focus on optimizations that exploit the deep memory
-hierarchy of modern CPUs, that make use of the instruction parallelism provided
-by the hardware, and those that decrease the number of instructions executed.
+performed by the compiler is presented in \cite{Bacon:1994:CTH:197405.197406}.
+We cover in our paper only a subset of those optimizations relevant for our
+discussion and our routines. Specifically, we focus on optimizations that
+exploit the deep memory hierarchy of modern CPUs, that make use of the
+instruction parallelism provided by the hardware, and those that decrease the
+number of instructions executed.
 
 A developer that aims at obtaining maximum performance from an architecture
 should not rely solely on the compiler for optimizations. Based on their

@@ -9,14 +9,17 @@ Hyper-threading enabled. For compilation we used \textit{gcc 4.6} with flags
 ``-O3 -march=native -funroll-loops -fargument-noalias -fopenmp''. The GPU cards
 used were GeForce GTX 480 of from Nvidia (Fermi architecture) having 1.5 GB of
 total memory and 15 multiprocessors each with 32 lanes operating at a clock
-speed of 1.4 GHz. An important observation to make is that the device supports
-CUDA Capability 2.0 which, among other features, includes the possibility for
-the same on-chip memory to be used for both L1 cache and shared memory. It can
-be configured as either 48 KB of shared memory and 16 KB of L1 cache or as 16 KB
-of shared memory and 48 KB of L1 cache. We used the second option for the
-\textit{evaluation} algorithm in order to cache the accesses to local and global
-memory and also temporary register spills. For compilation, we used
-\textit{Cuda Toolkit 4.1} with flags ``-arch=sm\_20''.
+speed of 1.4 GHz. For programming the GPUs, we started from the CPU code base
+and implemented the algorithms and optimizations with the established CUDA
+framework, making use of specific Nvidia features. An important observation to
+make is that the device supports CUDA Capability 2.0 which, among other
+features, includes the possibility for the same on-chip memory to be used for
+both L1 cache and shared memory. It can be configured as either 48 KB of shared
+memory and 16 KB of L1 cache or as 16 KB of shared memory and 48 KB of L1 cache.
+We used the second option for the \textit{evaluation} algorithm in order to
+cache the accesses to local and global memory and also temporary register
+spills. For compilation, we used \textit{Cuda Toolkit 4.1} with flags
+``-arch=sm\_20''.
 
 We present the impact of our optimizations for both CPU and GPU implementations
 by measuring the GFlops rate and comparing with the reference baseline case
@@ -37,29 +40,16 @@ grids are smaller then it is better to actually do the computations instead of
 doing memory lookups, which may result in cache misses. Lastly, we show that a
 speedup of 17x is obtained for the most performant GPU version compared to the
 corresponding CPU-based one and a speedup of 6.2x compared to the state of the
-art GPU version \cite{murarasu2011}.
+art GPU version \cite{Murarasu:2011:CDS:1941553.1941559}.
 
 \begin{figure}[h]
-\begin{center}
-\begin{minipage}[t]{\textwidth}%
-\vspace{0cm}%
-\begin{minipage}[c]{0.5\textwidth}%
-\vspace{0cm}%
-\begin{center}
-\subfloat[][CPU]{\label{fig:hier_cpu}\includegraphics[width=1\textwidth]{hier_cpu}}
-\end{center}
-\end{minipage}%
-\begin{minipage}[c]{0.5\textwidth}%
-\vspace{0cm}%
-\begin{center}
-\subfloat[][GPU]{\label{fig:hier_gpu}\includegraphics[width=1\textwidth]{hier_gpu}}
-\end{center}
-\end{minipage}%
-\end{minipage}%
-\end{center}
-\caption{Impact of optimizations on the performance of \textit{hierarchization}
-algorithm}
-\label{fig:hier_results}
+  \centering
+  \includegraphics[width=0.4\textwidth]{hier_cpu} \\
+  \vspace{5pt}
+  \includegraphics[width=0.4\textwidth]{hier_gpu}
+  \caption{Impact of optimizations on the performance of
+  \textit{hierarchization} algorithm}
+  \label{fig:hier_results}
 \end{figure}
 
 For the \textit{evaluation} algorithm, we used $10^{4}$ for CPU and $10^{6}$
@@ -78,24 +68,11 @@ one which confirms that sparse grids interpolation technique is cache friendly
 and easily parallelizable using our data structure.
 
 \begin{figure}[h]
-\begin{center}
-\begin{minipage}[t]{\textwidth}%
-\vspace{0cm}%
-\begin{minipage}[c]{0.5\textwidth}%
-\vspace{0cm}%
-\begin{center}
-\subfloat[][CPU]{\label{fig:eval_cpu}\includegraphics[width=1\textwidth]{eval_cpu}}
-\end{center}
-\end{minipage}%
-\begin{minipage}[c]{0.5\textwidth}%
-\vspace{0cm}%
-\begin{center}
-\subfloat[][GPU]{\label{fig:eval_gpu}\includegraphics[width=1\textwidth]{eval_gpu}}
-\end{center}
-\end{minipage}%
-\end{minipage}%
-\end{center}
-\caption{Impact of optimizations on the performance of \textit{evaluation}
-algorithm}
-\label{fig:eval_results}
+  \centering
+  \includegraphics[width=0.4\textwidth]{eval_cpu} \\
+  \vspace{5pt}
+  \includegraphics[width=0.4\textwidth]{eval_gpu}
+  \caption{Impact of optimizations on the performance of \textit{evaluation}
+  algorithm}
+  \label{fig:eval_results}
 \end{figure}

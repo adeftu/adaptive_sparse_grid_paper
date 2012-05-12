@@ -14,4 +14,11 @@ interpolation algorithms for adaptive sparse grids on GPUs and proved that our
 data structure and associated algorithms are easily parallelizable using
 architecture independent loop transformations.
 
-
+We see the convergence of CPUs and GPUs both in terms of hardware features and
+programming languages. On heterogeneous systems OpenCL \cite{opencl} is slowly
+making its way, but it is not as mature as CUDA and remains similarly complex.
+OpenACC \cite{openacc} is a new standard which has a lot of promise focusing on
+parallelization of loop nests. Using common transformations and with the help of
+autotuning techniques for evaluation, the differences in programming CPUs and
+GPUs will be in the future hidden inside these kinds of frameworks and
+libraries.
