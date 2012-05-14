@@ -11,8 +11,9 @@ Our application is the visualization of compressed, high-dimensional data
 resulting from simulations \cite{butnaru2011}. It is a well known fact that
 managing the data coming from functions with high number of dimensions has an
 exponential complexity on the number of dimensions. Therefore, we compress the
-data using the sparse grid technique in order to reduce its size and we
+data using the sparse grid technique in order to reduce its size and we 
 decompress it afterwards for real-time visualization. 
+For this purpose we employ the sparse grid library \textit{fastsg} described in \cite{murarasu2012}.
 
 Compressing a general function represented on a full grid is done by selecting
 only the function values at grid points also contained in a sparse grid. This is
