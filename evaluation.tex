@@ -30,8 +30,8 @@ obtained for CPU and up to 8x for GPU compared to the respective baseline cases.
 With the increase in the number of dimensions and the decrease of the sparse
 grid size, the speedup for GPU tends to decrease. This happens because the
 effects of most of the optimizations (e.g. improving caching and memory access
-patterns) are visible when a high degree of parallelization is achieved,
-situation which happens in the case of large grids. Thus, this context is a good
+patterns) are visible when a high degree of parallelism is achieved, situation
+which happens in the case of large grids. Thus, this context is a good
 opportunity for the use of auto-tuning techniques in order to choose at runtime
 the right hardware in a heterogeneous system for running the algorithm. It is
 also interesting to notice that \textit{inv4} brings a drop of performance when
@@ -63,7 +63,7 @@ the GPU main memory. Although caching is performed, we believe that a higher
 throughput could be obtained if we could have stored the results in shared
 memory. The optimization which brings a clear speedup is \textit{sred1} showing
 that division instructions are still very expensive on GPUs, fact also confirmed
-by the Nvidia Programming Guide. The GPU version is 28.3x faster than the CPU
+by \cite{cuda}. The GPU version is 28.3x faster than the CPU
 one which confirms that sparse grids interpolation technique is cache friendly
 and easily parallelizable using our data structure.
 
