@@ -32,7 +32,7 @@ grid size, the speedup for GPU tends to decrease. This happens because the
 effects of most of the optimizations (e.g. improving caching and memory access
 patterns) are visible when a high degree of parallelization is achieved,
 situation which happens in the case of large grids. Thus, this context is a good
-opportunity for the use of autotuning techniques in order to choose at runtime
+opportunity for the use of auto-tuning techniques in order to choose at runtime
 the right hardware in a heterogeneous system for running the algorithm. It is
 also interesting to notice that \textit{inv4} brings a drop of performance when
 applied on top of the other optimizations for CPU. This means that when the
@@ -48,7 +48,7 @@ art GPU version \cite{Murarasu:2011:CDS:1941553.1941559}.
   \vspace{5pt}
   \includegraphics[width=0.4\textwidth]{hier_gpu}
   \caption{Impact of optimizations on the performance of
-  \textit{hierarchization} algorithm}
+  \textit{hierarchization} algorithm for CPU (top) and GPU (bottom)}
   \label{fig:hier_results}
 \end{figure}
 
@@ -73,6 +73,6 @@ and easily parallelizable using our data structure.
   \vspace{5pt}
   \includegraphics[width=0.4\textwidth]{eval_gpu}
   \caption{Impact of optimizations on the performance of \textit{evaluation}
-  algorithm}
+  algorithm for CPU (top) and GPU (bottom)}
   \label{fig:eval_results}
 \end{figure}
