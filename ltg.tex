@@ -1,6 +1,8 @@
 \documentclass[10pt, conference]{IEEEtran}
 
 \usepackage{graphicx}
+\usepackage{caption}
+\usepackage{subcaption}
 \usepackage{indentfirst}
 \usepackage{subfig}
 \usepackage{amssymb}
@@ -12,6 +14,7 @@
 \usepackage{url}
 \usepackage{cite}
 \usepackage[utf8x]{inputenc}
+\usepackage{multirow}
 
 \graphicspath{{./img/}}
 
@@ -54,96 +57,20 @@ sparse grids, GPU, library, optimizations, CUDA
 \end{IEEEkeywords}
 
 \input{introduction}
-% processors architects have problems: frequency and memory wall
-% gpus represent the means to address these problems
-% despite the fact that gpus can be seen as vector processors and cpus are also (short vector) processors, programming them is considered complex
-% we show in this paper our experience with porting dimensionally adaptive sparse grids on gpus
-% this is the first time this is acomplished
-% we describe in detail our experience with porting the loop transformations applied to the cpu version to the gpu part
-% from the gpus, we focus on the nvidia fermis
-% when it was released, nvidia fermi was the first gpu generation from Nvidia featuring a cpu-like cache coherent cache
-% this can be considered as part of the tendency that gpus borrow properties from cpus
-% this happens also with cpus, e.g. Intel Sandy Bridge has doubled the width of the SIMD unit from 128 bits (Nehalem) to 256 bit
-% given this convergence, a question is how is to port an optimized cpu code to the gpu? can we port the optimizations in the same order and exactly as applied on the cpus? what are the challenges? we answer these questions in the context of a computational steering application
-
-% the contributions of this paper:
-% (1) first port of dimensionally adaptive sparse grid on gpus; speedup of xxx for gpus compared to one core cpu
-% (2) a study of the performance of a subset of common loop transformations on gpus
-% NOTE: say something about previous work; what are the differences in performance and # of transformations applied to the code?
-% in this work we propose an extensive (a more comprehensive) set of optimizations which result in a speedup of xxx compared to the state of the art implementation used in murarasu@ppopp'2011
-
 
 \input{related_work}
-% our paper from ppopp'2011 => algorithms
-% papers about dimensionally adaptive sparse grids
-% butnaru@iccs'2011 => computational steering using sparse grids
-
-% compared to our previous work, we propose a more extensive set of optimizations
-% the previous work refers to regular sparse grids
-
-
 
 \input{cpus_vs_gpus}
-% our goal: to speedup our application on gpus
-
-% cpus = latency oriented
-% gpus = throughput oriented
-
-
-\input{comp_steering}
-% based on the sparse grid technique for compressing / decompressing simulation data
-% the algorithms which we optimize were covered in murarasu@ppopp'2011
-% we apply optimization on those algorithms
-% NOTE: it is important to compare ourselves with previous work
-
-% compression is achieved via hierarchization
-% decompression is sparse grid evaluation or interpolation
-
-% formulas for hierarchization and interpolation
-% hierarchization means computing the hierarchical coefficients corresponding to basis functions (= building the approximation)
-% evaluation of the approximation at any given point inside the domain means summing up the contributions of the basis functions (= interpolation)
-% img.: dimensionally adaptive sparse grids vs. regular sparse grids
 
 \input{loop_transf}
-% show an example with a loop nest
-% explain how parallelization happens on cpus and gpus
-% think about gpus are many-core with wide vector units
-% explain that this a just a model of gpus
-% in reality the gpu architecture is complex, allowing for masking of the vector unit lanes in hardware
-% in cuda, this is called thread divergence and means the threads in a warp follow separate control paths
-% this means they are serialized
-% as an analogy, on cpus, this has to be handled in software, making it more complex
 
+\input{comp_steering}
 
 \input{op_strategies}
-% three directions: locality, vectorization, and integers
-% for locality: loop interchange => outer loop vs inner loop
-% vectorization: aos to soa => no bank conflics (same on cpu and gpu)
-% integers: loop invariant code motion and memorization (lookup tables) => where to place lookup tables in the fast memories of the gpu
-% NOTE: it would have been nice to show how much performance we lose if we use only caches on gpus (no special memories)
-% present all loop transformations on cpus
-% present their implementation on gpus
-% focus only on the most important transformations!
-
 
 \input{evaluation}
-% experimental setup: quad core nehalem + gtx 480 (fermi)
-% speedup on cpu
-% speedup on gpu
-% compare the optimizations and their behavior on each architecture
-
 
 \input{conclusion}
-% what are the general lessons that readers should take with them after reading this paper?
-% cpus and gpus are both vector processors: cpus - short vector units, gpus - large vector units
-% cpus and gpus have caches with multiple levels
-% this means that some optimizations, at least conceptually, should be the same
-% we show in this paper how loop transformations applied to a computational steering application behave on cpus and gpus
-% we propose an extensive set of optimizations for both cpus and gpus that provide a speedup of up to xxx
-
-
-% \section*{Acknowledgement}
-% This publication is based on work supported by Award No. UK-C0020, made by King Abdullah University of Science and Technology (KAUST).
 
 \bibliographystyle{IEEEtran}
 \bibliography{refs}

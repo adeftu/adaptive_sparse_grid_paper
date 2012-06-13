@@ -21,22 +21,6 @@ vector processors is at the foundation of
 \cite{Volkov:2008:BGT:1413370.1413402}. The tuning strategy presented there was
 afterwards included in the \textit{cublas} library from Nvidia.
 
-% CUDA can be misleading when referring to the architecture. Of course, a
-% trade-off should be clarified at this point. It does what it does to simplify
-% programming with the cost of hiding the real hardware. Through CUDA lenses, the
-% GPU is an array of hundreds of scalar cores which for us they generally map to
-% SIMD lanes. The cores are at the immediate upper level contained in a Streaming
-% Multi-processor (SM). For Nvidia Fermi GPUs, an SM contains 32 of such cores. SM
-% has low latency, local memory which is reconfigurable allowing for different
-% ratios between the scratchpad and the L1 cache. At a upper layer we have an 768
-% KB L2 cache improving the access to the RAM on the GPU. This is the hardware
-% part. On top of it, CUDA defines how the software maps to it. The main concept
-% here is the thread. The threads are implicitly executed as warps of 32, each
-% branch taken by one of the 32 reduces performance, much as it happens when
-% masking the lanes of a SIMD unit. CUDA threads are grouped explicitly this time
-% in blocks and a block is executed on an SM. Communication among threads is
-% allowed only within a block.
-
 But when reasoning about code transformations that improve performance on a wide
 range of architectures, we do not want to lose ourselves in the details of the
 programming models. This high-level simplified view allows us to have more
@@ -60,9 +44,9 @@ with compressed simulation data. We have two phases (or algorithms) being at the
 core of the compression and decompression of the simulation data. These
 algorithms are in fact based on a numerical method called the sparse grid
 technique which allows for a hierarchical and efficient representation of
-high-dimensional functions. Using it, it was shown that sheer amounts of
-simulation data can be managed efficiently both with regard to time and space,
-i.e. memory footprint.
+high-dimensional functions, similar to wavelet series. Using it, it was shown
+that sheer amounts of simulation data can be managed efficiently both with
+regard to time and space, i.e. memory footprint.
 
 For enhanced performance, it was important to benefit from the latest
 developments in hardware. But starting from scratch with every hardware release
@@ -76,7 +60,7 @@ we can design optimizations that have performance portability. The main
 contributions of our paper are as follows:
 
 \begin{itemize}
-  \item We port dimensionally adaptive sparse grids algorithms on GPUs and
+  \item We port dimensionally truncated sparse grids algorithms on GPUs and
   report a speedup of 28.3x compared to the CPU versions.
   \item We present a study on the performance of a subset of common loop
   transformations for two different architectures, CPUs and GPUs. We describe
@@ -86,4 +70,18 @@ contributions of our paper are as follows:
   factor of 6.2x.
 \end{itemize}
 
-
+The rest of the paper is structured as follows. In
+Section~\ref{sec:related_work} we place our work in the field of application
+optimizations and sparse grids and relate to previous published papers.
+Section~\ref{sec:cpus_vs_gpus} highlights the similarity between CPUs and GPUs,
+seen as modern processors which borrow architectural features from each other,
+making them easy targets for common optimizations.
+In Section~\ref{sec:optimizations} we describe a set of loop transformation
+suitable for both architectures in this context. Section~\ref{sec:comp_steering}
+introduces in the field of sparse grids and presents the core functionality of
+our library. Section~\ref{sec:op_strategies} shows how we can apply
+optimizations for both CPUs and GPUs based on the aforementioned ideas. In
+Section~\ref{sec:evaluation} we present our results and show that despite using
+different architectures, similarities in hardware characteristics can make
+optimizing code easier. Finally, Section~\ref{sec:conclusion} concludes our
+work.

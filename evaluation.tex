@@ -1,4 +1,5 @@
 \section{Evaluation}
+\label{sec:evaluation}
 
 In this section we present the results obtained for both CPU and GPU
 implementations and analyze the speedup obtained when applying the
@@ -7,7 +8,7 @@ optimizations described in Section~\ref{sec:op_strategies}.
 Our test system is a quad-core Intel Core i7-920 running at 2.67 GHz with
 Hyper-threading enabled. For compilation we used \textit{gcc 4.6} with flags
 ``-O3 -march=native -funroll-loops -fargument-noalias -fopenmp''. The GPU cards
-used were GeForce GTX 480 of from Nvidia (Fermi architecture) having 1.5 GB of
+used were GeForce GTX 480 from Nvidia (Fermi architecture) having 1.5 GB of
 total memory and 15 multiprocessors each with 32 lanes operating at a clock
 speed of 1.4 GHz. For programming the GPUs, we started from the CPU code base
 and implemented the algorithms and optimizations with the established CUDA
@@ -20,6 +21,22 @@ We used the second option for the \textit{evaluation} algorithm in order to
 cache the accesses to local and global memory and also temporary register
 spills. For compilation, we used \textit{Cuda Toolkit 4.1} with flags
 ``-arch=sm\_20''.
+
+\begin{figure}[t]
+  \begin{subfigure}[b]{1\linewidth}
+    \centering
+    \includegraphics[width=1\linewidth]{hier_cpu} \\
+    \caption{CPU}
+  \end{subfigure}
+  \\ \\
+  \begin{subfigure}[b]{1\linewidth}
+    \centering
+    \includegraphics[width=1\linewidth]{hier_gpu}
+    \caption{GPU}
+  \end{subfigure}
+  \caption{Impact of optimizations on the performance of \textit{hierarchization} algorithm.}
+  \label{fig:hier_results}
+\end{figure}
 
 We present the impact of our optimizations for both CPU and GPU implementations
 by measuring the GFlops rate and comparing with the reference baseline case
@@ -44,15 +61,15 @@ speedup of 17x is obtained for the most performant GPU version compared to the
 corresponding CPU-based one and a speedup of 6.2x compared to the state of the
 art GPU version \cite{Murarasu:2011:CDS:1941553.1941559}.
 
-\begin{figure}[h]
-  \centering
-  \includegraphics[width=0.5\textwidth]{hier_cpu} \\
-  \vspace{5pt}
-  \includegraphics[width=0.5\textwidth]{hier_gpu}
-  \caption{Impact of optimizations on the performance of
-  \textit{hierarchization} algorithm for CPU (top) and GPU (bottom)}
-  \label{fig:hier_results}
-\end{figure}
+% \begin{figure}[h]
+%   \centering
+%   \includegraphics[width=0.5\textwidth]{hier_cpu} \\
+%   \vspace{5pt}
+%   \includegraphics[width=0.5\textwidth]{hier_gpu}
+%   \caption{Impact of optimizations on the performance of
+%   \textit{hierarchization} algorithm for CPU (top) and GPU (bottom)}
+%   \label{fig:hier_results}
+% \end{figure}
 
 For the \textit{evaluation} algorithm, we used $10^{4}$ for CPU and $10^{6}$
 for GPU random points, uniformly distributed in the function domain. We
@@ -69,12 +86,28 @@ emphasized by \cite{cuda}. The GPU version is 28.3x faster than the CPU
 one which confirms that sparse grids interpolation technique is cache friendly
 and easily parallelizable using our data structure.
 
-\begin{figure}[h]
-  \centering
-  \includegraphics[width=0.5\textwidth]{eval_cpu} \\
-  \vspace{5pt}
-  \includegraphics[width=0.5\textwidth]{eval_gpu}
-  \caption{Impact of optimizations on the performance of \textit{evaluation}
-  algorithm for CPU (top) and GPU (bottom)}
+\begin{figure}[t]
+  \begin{subfigure}[b]{1\linewidth}
+    \centering
+    \includegraphics[width=1\linewidth]{eval_cpu} \\
+    \caption{CPU}
+  \end{subfigure}
+  \\ \\
+  \begin{subfigure}[b]{1\linewidth}
+    \centering
+    \includegraphics[width=1\linewidth]{eval_gpu}
+    \caption{GPU}
+  \end{subfigure}
+  \caption{Impact of optimizations on the performance of \textit{evaluation} algorithm.}
   \label{fig:eval_results}
 \end{figure}
+
+% \begin{figure}[h]
+%   \centering
+%   \includegraphics[width=0.5\textwidth]{eval_cpu} \\
+%   \vspace{5pt}
+%   \includegraphics[width=0.5\textwidth]{eval_gpu}
+%   \caption{Impact of optimizations on the performance of \textit{evaluation}
+%   algorithm for CPU (top) and GPU (bottom)}
+%   \label{fig:eval_results}
+% \end{figure}
