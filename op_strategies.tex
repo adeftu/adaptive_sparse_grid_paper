@@ -30,7 +30,7 @@ representation of the sparse grid, $asg1d$.
 
 \begin{algorithm}[h]
 \small{
-	\caption{Hierarchization on GPU.}
+	\caption{Hierarchization on GPU}
  	\label{alg:hierarchization}                       
 
  	\begin{algorithmic}[1]
@@ -45,7 +45,8 @@ representation of the sparse grid, $asg1d$.
 	\begin{algorithmic}[1]
   		\algrestore{bkbreak}
   		\Procedure{HierarchizeKernel}{$t, g$}
-	 		\For{$j \leftarrow \Call{BlockStart}{g} + lane; j < \Call{BlockEnd}{g}; j\leftarrow j + 32$}
+	 		\For{$j \leftarrow \Call{BlockStart}{g} + lane;$ \\
+	 		    \hspace{24pt} $j < \Call{BlockEnd}{g}; \; j\leftarrow j + 32$}
 	 			\If{$lane = 0$}
 	 				\State $l \leftarrow idx2l(j)$
 	 			\EndIf
@@ -189,12 +190,13 @@ $\textit{asg1d}$, while $idx1$ idexes the current point in this \textit{block}.
 
 \begin{algorithm}[h]
 \small{
-	\caption{Evaluation on GPU.}
+	\caption{Evaluation on GPU}
 	\label{alg:evaluation}
 	\begin{algorithmic}[1]
  		\Procedure{EvaluateKernel}{$w$}
-    		\For{$j \leftarrow \Call{ChunkStart}{w} + lane; j < \Call{ChunkEnd}{w}; j \leftarrow j + 32$} 
-    		\State $\textit{idx23} \leftarrow 0$
+    		\For{$j \leftarrow \Call{ChunkStart}{w} + lane;$ \\ 
+    		\hspace{24pt} $j < \Call{ChunkEnd}{w}; \; j \leftarrow j + 32$} 
+    		    \State $\textit{idx23} \leftarrow 0$
 				\For{$g=1$ to $L$}
 					\For{$b=1$ to $a(D, g)$}
 						\State $\textit{idx1} \leftarrow 0$
