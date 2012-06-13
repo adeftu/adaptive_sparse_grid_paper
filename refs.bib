@@ -1,51 +1,4 @@
-@conference{volkov2008,
-	author = {Volkov, V. and Demmel, J.},
-	title = {{Benchmarking GPUs to tune dense linear algebra}},
-	booktitle = {ACM/IEEE Conference on Supercomputing (SC08)},
-	year = {2008}
-}
-
-@article{bungartz2004,
-author = {Bungartz,H.-J. and Griebel,M.},
-title = {{Sparse Grids}},
-journal = {Acta Numerica},
-volume = {13},
-number = {-1},
-pages = {147-269},
-year = {2004},
-doi = {10.1017/S0962492904000182},
-URL = {http://journals.cambridge.org/action/displayAbstract?fromPage=online&aid=227245&fulltextType=RA&fileId=S0962492904000182},
-eprint = {http://journals.cambridge.org/article_S0962492904000182},
-}
-
-@article{butnaru2011,
-  author    = {D. Butnaru and
-               D. Pfl{\"u}ger and
-               H.-J. Bungartz},
-  title     = {{Towards High-Dimensional Computational Steering of Precomputed
-               Simulation Data using Sparse Grids}},
-  journal   = {Procedia CS},
-  volume    = {4},
-  year      = {2011},
-  pages     = {56-65},
-  ee        = {http://dx.doi.org/10.1016/j.procs.2011.04.007},
-  bibsource = {DBLP, http://dblp.uni-trier.de}
-}
-
-@inproceedings{murarasu2011,
-  author    = {A. F. Murarasu and
-               J. Weidendorfer and
-               G. Buse and
-               D. Butnaru and
-               D. Pfl{\"u}ger},
-  title     = {{Compact Data Structure and Scalable Algorithms for the Sparse
-               Grid Technique}},
-  booktitle = {PPOPP},
-  year      = {2011},
-  pages     = {25-34}
-}
-
-@misc{fermi,
+@manual{fermi,
 	author		= "{NVIDIA}",
     howpublished = {White paper},
 	title		= "{NVIDIA's Next Generation CUDA Compute Architecture: Fermi}",
@@ -59,26 +12,20 @@ eprint = {http://journals.cambridge.org/article_S0962492904000182},
 }
 
 @manual{opencl,
-	author		= "{Khronos}",
-	title		= "{The OpenCL Specification 1.1}",
-	year		= {2010}
+	author		  = "{Khronos}",
+	title         = "{OpenCL website}",
+	howpublished  = "{http://www.khronos.org/opencl}"
+}
+
+@manual{openacc,
+    author        = "{OpenACC.org}",
+	title         = "{OpenACC website}",
+	howpublished  = "{http://www.openacc-standard.org}"
 }
 
 @manual{openmp,
 	title		= "{OpenMP Application Programming Interface}",
 	year		= {2008}
-}
-
-@inproceedings{augonnet2009,
-  author    = {C. Augonnet and
-               S. Thibault and
-               R. Namyst and
-               P.-A. Wacrenier},
-  title     = "{StarPU: A Unified Platform for Task Scheduling on Heterogeneous
-               Multicore Architectures}",
-  booktitle = {Euro-Par},
-  year      = {2009},
-  pages     = {863-874}
 }
 
 @manual{avx,
@@ -93,113 +40,172 @@ eprint = {http://journals.cambridge.org/article_S0962492904000182},
 	year		= {2011}
 }
 
-@article{klimke2005,
-  author    = {A. Klimke and
-               B. I. Wohlmuth},
-  title     = "{Algorithm 847: Spinterp: Piecewise Multilinear Hierarchical
-               Sparse Grid Interpolation in MATLAB}",
-  journal   = {ACM Trans. Math. Softw.},
-  volume    = {31},
-  number    = {4},
-  year      = {2005},
-  pages     = {561-579},
-  ee        = {http://doi.acm.org/10.1145/1114268.1114275},
-  bibsource = {DBLP, http://dblp.uni-trier.de}
+@manual{intel_mic,
+	author		= "{Intel}",
+	title		= "{Intel Many Integrated Core (Intel MIC) Architecture}",
+	note        = "{ISC'11 Demos and Performance Description}",
+	year		= {2011}
 }
 
-@misc{magma,
-	title		= "{MAGMA, Matrix Algebra on GPU and Multicore Architectures}",
-	howpublished = "\url{http://icl.cs.utk.edu/magma/index.html}"
+
+@inproceedings{Volkov:2008:BGT:1413370.1413402,
+ author = {Volkov, Vasily and Demmel, James W.},
+ title = {Benchmarking GPUs to tune dense linear algebra},
+ booktitle = {Proceedings of the 2008 ACM/IEEE conference on Supercomputing},
+ series = {SC '08},
+ year = {2008},
+ isbn = {978-1-4244-2835-9},
+ location = {Austin, Texas},
+ pages = {31:1--31:11},
+ articleno = {31},
+ numpages = {11},
+ acmid = {1413402},
+ publisher = {IEEE Press},
+ address = {Piscataway, NJ, USA},
 }
 
-@book{foster1995,
-  title="{Designing and Building Parallel Programs: Concepts and Tools for Parallel Software Engineering}",
-  author={Foster, I.},
-  isbn={9780201575941},
-  lccn={94003661},
-  series={Parallel programming / scientific computing},
-  url={http://books.google.com/books?id=r5JsQgAACAAJ},
-  year={1995},
-  publisher={Addison-Wesley}
+@inproceedings{volkov2010,
+  author    = {Volkov, Vasily},
+  title     = {{Programming inverse memory hierarchy: case of stencils on GPUs}},
+  booktitle = {International Conference on Parallel Computational Fluid Dynamics (ParCFD 2010)},
+  year      = {2010}
 }
 
-@article{garland2010,
- author = {Garland, M. and Kirk, D. B.},
- title = "{Understanding Throughput-oriented Architectures}",
- journal = {Commun. ACM},
- issue_date = {November 2010},
- volume = {53},
- issue = {11},
- month = {November},
- year = {2010},
- issn = {0001-0782},
- pages = {58--66},
- numpages = {9},
- url = {http://doi.acm.org/10.1145/1839676.1839694},
- doi = {http://doi.acm.org/10.1145/1839676.1839694},
- acmid = {1839694},
+@inproceedings{Leung:2009:APG:1596655.1596670,
+ author = {Leung, Alan and Lhot\'{a}k, Ond\v{r}ej and Lashari, Ghulam},
+ title = {Automatic parallelization for graphics processing units},
+ booktitle = {Proceedings of the 7th International Conference on Principles and Practice of Programming in Java},
+ series = {PPPJ '09},
+ year = {2009},
+ isbn = {978-1-60558-598-7},
+ location = {Calgary, Alberta, Canada},
+ pages = {91--100},
+ numpages = {10},
+ acmid = {1596670},
  publisher = {ACM},
  address = {New York, NY, USA},
+} 
+
+@article{Tomov:2010:TDL:1805333.1805388,
+ author = {Tomov, Stanimire and Dongarra, Jack and Baboulin, Marc},
+ title = {Towards dense linear algebra for hybrid GPU accelerated manycore systems},
+ journal = {Parallel Comput.},
+ issue_date = {June, 2010},
+ volume = {36},
+ number = {5-6},
+ month = jun,
+ year = {2010},
+ issn = {0167-8191},
+ pages = {232--240},
+ numpages = {9},
+ acmid = {1805388},
+ publisher = {Elsevier Science Publishers B. V.},
+ address = {Amsterdam, The Netherlands, The Netherlands},
+ keywords = {Dense linear algebra, Graphics processing units, Hybrid computing, Multicore processors, Parallel algorithms},
+} 
+
+@inproceedings{Nath:2011:OSD:2063384.2063392,
+ author = {Nath, Rajib and Tomov, Stanimire and Dong, Tingxing "Tim" and Dongarra, Jack},
+ title = {Optimizing symmetric dense matrix-vector multiplication on GPUs},
+ booktitle = {Proceedings of 2011 International Conference for High Performance Computing, Networking, Storage and Analysis},
+ series = {SC '11},
+ year = {2011},
+ isbn = {978-1-4503-0771-0},
+ location = {Seattle, Washington},
+ pages = {6:1--6:10},
+ articleno = {6},
+ numpages = {10},
+ acmid = {2063392},
+ publisher = {ACM},
+ address = {New York, NY, USA},
+ keywords = {GPU, autotuning, dense linear algebra, matrix-vector multiplication, optimization, pointer redirecting, recursive blocking, symmetric matrix},
+} 
+
+@article{CambridgeJournals:227245,
+author = {Bungartz,Hans-Joachim and Griebel,Michael},
+title = {Sparse grids},
+journal = {Acta Numerica},
+volume = {13},
+number = { },
+pages = {147-269},
+year = {2004},
+doi = {10.1017/S0962492904000182},
+eprint = {http://journals.cambridge.org/article_S0962492904000182},
+} 
+
+@article{Butnaru201156,
+title = "Towards High-Dimensional Computational Steering of Precomputed Simulation Data using Sparse Grids",
+journal = "Procedia Computer Science",
+volume = "4",
+number = "0",
+pages = "56 - 65",
+year = "2011",
+issn = "1877-0509",
+doi = "10.1016/j.procs.2011.04.007",
+author = "Daniel Butnaru and Dirk Pfl{\"u}ger and Hans-Joachim Bungartz",
 }
 
-@INPROCEEDINGS{dynamic02,
-    author = {A. Osman and H. Ammar},
-    title = "{Dynamic Load Balancing Strategies for Parallel Computers}",
-    booktitle = {ISPDC},
-    month = {July},
-    year = {2002},
-    address = {Romania}
+@inproceedings{Murarasu:2011:CDS:1941553.1941559,
+ author = {Murarasu, Alin and Weidendorfer, Josef and Buse, Gerrit and Butnaru, Daniel and Pfl\"{u}ger, Dirk},
+ title = {Compact data structure and scalable algorithms for the sparse grid technique},
+ booktitle = {Proceedings of the 16th ACM symposium on Principles and practice of parallel programming},
+ series = {PPoPP '11},
+ year = {2011},
+ isbn = {978-1-4503-0119-0},
+ location = {San Antonio, TX, USA},
+ pages = {25--34},
+ numpages = {10},
+ doi = {10.1145/1941553.1941559},
+ acmid = {1941559},
+ publisher = {ACM},
+ address = {New York, NY, USA},
+ keywords = {gpu, performance optimization, sparse grids},
+} 
+
+@inproceedings{murarasu12fastsg:,
+    author = {Murarasu, Alin and Buse, Gerrit and Weidendorfer, Josef and Pfl{\"{u}}ger, Dirk and Bode, Arndt},
+    booktitle = {Proceedings of the International Conference on Computational Science, ICCS 2012},
+    month = jun,
+    note = {accepted for publication},
+    series = {Procedia Computer Science},
+    title = {fastsg: A Fast Routines Library for Sparse Grids},
+    year = {2012}
 }
 
-@inproceedings{ryo2008,
-  author    = {S. Ryoo and
-               C. I. Rodrigues and
-               S. S. Baghsorkhi and
-               S. S. Stone and
-               D. B. Kirk and
-               W. W. Hwu},
-  title     = {{Optimization principles and application performance evaluation of a multithreaded GPU using CUDA}},
-  booktitle = {PPOPP},
-  year      = {2008},
-  pages     = {73-82},
-  ee        = {http://doi.acm.org/10.1145/1345206.1345220},
-}
+@article{Bacon:1994:CTH:197405.197406,
+ author = {Bacon, David F. and Graham, Susan L. and Sharp, Oliver J.},
+ title = {Compiler transformations for high-performance computing},
+ journal = {ACM Comput. Surv.},
+ issue_date = {Dec. 1994},
+ volume = {26},
+ number = {4},
+ month = dec,
+ year = {1994},
+ issn = {0360-0300},
+ pages = {345--420},
+ numpages = {76},
+ doi = {10.1145/197405.197406},
+ acmid = {197406},
+ publisher = {ACM},
+ address = {New York, NY, USA},
+ keywords = {compilation, dependence analysis, locality, multiprocessors, optimization, parallelism, superscalar processors, vectorization},
+} 
 
-@inproceedings{won2010,
-  author    = {H. Wong and
-               M. M. Papadopoulou and
-               M. Sadooghi-Alvandi and
-               A. Moshovos},
-  title     = {Demystifying GPU microarchitecture through microbenchmarking},
-  booktitle = {ISPASS},
-  year      = {2010},
-  pages     = {235-246},
-  ee        = {http://dx.doi.org/10.1109/ISPASS.2010.5452013},
-  bibsource = {DBLP, http://dblp.uni-trier.de}
-}
-
-@article{bacon1994,
-  author = {Bacon, D. F. and Graham, S. L. and Sharp, O. J.},
-  title = {{Compiler transformations for high-performance computing}},
-  journal = {ACM Comput. Surv.},
-  volume = {26},
-  issue = {4},
-  month = {December},
-  year = {1994},
-  issn = {0360-0300},
-  pages = {345--420},
-  numpages = {76},
-  url = {http://doi.acm.org/10.1145/197405.197406},
-  doi = {http://doi.acm.org/10.1145/197405.197406},
-  acmid = {197406},
-  publisher = {ACM},
-  address = {New York, NY, USA},
-  keywords = {compilation, dependence analysis, locality, multiprocessors, optimization, parallelism, superscalar processors, vectorization},
-}
-
-@conference{murarasu2012,
-	author = {A. F. Murarasu and G. Buse and J. Weidendorfer and D. Pfl{\"u}ger and A. Bode},
-	title = {{fastsg: A Fast Routines Library for Sparse Grids}},
-	booktitle = {International Conference on Computational Science (ICCS)},
-	year = {2012}
-}
+@article{Augonnet:2011:SUP:1951453.1951454,
+ author = {Augonnet, C\&\#x00e9;dric and Thibault, Samuel and Namyst, Raymond and Wacrenier, Pierre-Andr\&\#x00e9;},
+ title = "{StarPU: a unified platform for task scheduling on heterogeneous multicore architectures}",
+ journal = {Concurr. Comput. : Pract. Exper.},
+ issue_date = {February 2011},
+ volume = {23},
+ number = {2},
+ month = feb,
+ year = {2011},
+ issn = {1532-0626},
+ pages = {187--198},
+ numpages = {12},
+ doi = {10.1002/cpe.1631},
+ acmid = {1951454},
+ publisher = {John Wiley and Sons Ltd.},
+ address = {Chichester, UK},
+ keywords = {GPU, accelerator, multicore, runtime system, scheduling},
+} 

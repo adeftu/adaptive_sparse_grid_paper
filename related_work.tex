@@ -1,9 +1,21 @@
 \section{Related Work}
 A compact data structure and efficient in-place algorithms for regular sparse
-grids were presented in \cite{murarasu2011} and further extended to support
-adaptive sparse grids on CPUs in \cite{murarasu2012}. In this paper we start
+grids were presented in \cite{Murarasu:2011:CDS:1941553.1941559} and further extended to support
+adaptive sparse grids on CPUs in \cite{murarasu12fastsg:}. In this paper we start
 from these basic algorithms for adaptive sparse grids and implement new ones for
-GPUs. In addition, we present a set of loop transformations for both CPUs and
-GPUS.
+GPUs. In addition, we present a set of loop transformations for increasing
+the performance on both CPUs and GPUs.
 
+A set of techniques for efficient programming of hybrid systems in the context
+of dense linear algebra were presented in \cite{Tomov:2010:TDL:1805333.1805388}.
+Here they show how the computation can be split for a better exploitation of
+each device, but do not address the problem of programming CPUs and GPUs using a
+set of common features. However, we believe that auto-tuning and in particular
+runtime auto-tuning would have a good support in hybrid systems in the years to
+come.
 
+Also related to this field of study is the work from
+\cite{Augonnet:2011:SUP:1951453.1951454}, which shows techniques for efficiently
+exploiting heterogeneous systems through an uniform execution model. This would
+allow the design of kernels for executing tasks in parallel and provide some
+auto-tuning through scheduling algorithms.

@@ -9,9 +9,15 @@ same. With these concepts in mind, we proposed an extensive set of optimizations
 for both CPUs and GPUs that provide a speedup of up to 12.8x and 5.2x
 respectively.
 
-In addition, we presented the first implementation of interpolation
-using the adaptive sparse grids technique on GPUs and proved that our data
-structure and associated algorithms are easily parallelizable using architecture
-independent loop transformations.
+In addition, we presented the first implementation of hierarchization and
+interpolation algorithms for adaptive sparse grids on GPUs and proved that our
+data structure and associated algorithms are easily parallelizable using
+architecture independent loop transformations.
 
-
+We see the convergence of CPUs and GPUs both in terms of hardware features and
+programming languages. On heterogeneous systems OpenCL \cite{opencl} is slowly
+making its way, but it is not as mature as CUDA and remains similarly complex.
+OpenACC \cite{openacc} is a new standard with a lot of promise which focuses on
+parallelization of loop nests. These types of frameworks will take the burdon
+of focusing on architecural differences when programming, while at the same time
+incorporating common transformations and using auto-tuning techniques for evaluation.

@@ -1,48 +1,70 @@
-\section{CPUs versus GPUs}
+\section{CPUs and GPUs}
 Heterogeneous systems containing CPUs and accelerators allow us to reach higher
 computational speeds while keeping power consumption at acceptable levels. The
-most common accelerators nowadays, GPUs, are very different compared to
-state-of-the-art general-purpose CPUs. While CPUs incorporate large caches and
-complex logic for out-of-order execution, branch prediction, and speculation,
-GPUs contain significantly more floating point units. They have in-order cores
-which hide pipeline stalls through interleaved multithreading, e.g. allowing up
-to 1536 concurrent threads per core\footnote{In Nvidia terminology a core is
-called Streaming Multi-Processor.}.
-Garland et al.~\cite{garland2010} refer to CPUs as latency oriented processors
-with complex techniques used for extracting Instruction Level Parallelism (ILP)
-from sequential programs. In contrast, GPUs are throughput oriented, containing
-a large number of cores (e.g. 16) with wide SIMD units (e.g. 32 lanes), making
-them ideal architectures for vectorizable codes. All applications can be run on
-CPUs but only a subset can be ported to or deliver good performance on GPUs,
-making them special purpose processors. In the following, we refer to GPUs and
-CPUs as processors, but of different type.
+latest developments show a trend towards an unification in terms of hardware
+features of both architectures. The CPUs manufacturers abandoned the classic way
+of increasing the speed by raising the frequency with each new release and
+instead they are now focusing on increasing the performance through
+vectorization and a large number of cores. An eloquent example is Intel's Many
+Integrated Core Architecture (MIC) \cite{intel_mic} which is announced to
+include 512-bit wide vector registers and more than 50 cores per chip (in
+Knights Corner product line). On the other hand, GPUs manufacturers started to
+include CPU-like features in their products. Nvidia's Fermi \cite{fermi} was
+the first GPU generation from Nvidia featuring a cache coherent cache and today
+all devices tend to have a cache hierarchy similar to the one for CPUs.
 
-Given their specific architectural characteristics, programming the CPU and the
-GPU is inherently different. Multi-core CPUs are programmed using operating
-system threads. For GPU programming, CUDA is also based on threads, but there
-are differences. For synchronization, CUDA only provides barriers within thread
-groups running on the same GPU core, and atomic operations. For performance, the
-architectural details of GPUs have to be considered. Maximizing the number of
-threads running concurrently on the GPU, coalescing accesses to global memory,
-eliminating bank conflicts, minimizing the number of branches, and utilizing the
-various memories appropriately (global, shared, texture, constant) are important
-GPU optimizations. In contrast, common CPU optimizations include cache blocking
-and vectorization.
+Nonetheless, when performance becomes a priority, programming the GPUs requires
+being aware of some architectural features that are different. We will describe
+in the following subsections the current GPU architectures using CUDA terms and
+provide some brief guidelines for programming Nvidia cards.
+
+% The most common accelerators nowadays, GPUs, are very different compared to
+% state-of-the-art general-purpose CPUs. While CPUs incorporate large caches and
+% complex logic for out-of-order execution, branch prediction, and speculation,
+% GPUs contain significantly more floating point units. They have in-order cores
+% which hide pipeline stalls through interleaved multithreading, e.g. allowing up
+% to 1536 concurrent threads per core\footnote{In Nvidia terminology a core is
+% called Streaming Multi-Processor.}.
+% Garland et al.~\cite{garland2010} refer to CPUs as latency oriented processors
+% with complex techniques used for extracting Instruction Level Parallelism (ILP)
+% from sequential programs. In contrast, GPUs are throughput oriented, containing
+% a large number of cores (e.g. 16) with wide SIMD units (e.g. 32 lanes), making
+% them ideal architectures for vectorizable codes. All applications can be run on
+% CPUs but only a subset can be ported to or deliver good performance on GPUs,
+% making them special purpose processors. In the following, we refer to GPUs and
+% CPUs as processors, but of different type.
+
+% Given their specific architectural characteristics, programming the CPU and the
+% GPU is inherently different. Multi-core CPUs are programmed using operating
+% system threads. For GPU programming, CUDA is also based on threads, but there
+% are differences. For synchronization, CUDA only provides barriers within thread
+% groups running on the same GPU core, and atomic operations. For performance, the
+% architectural details of GPUs have to be considered. Maximizing the number of
+% threads running concurrently on the GPU, coalescing accesses to global memory,
+% eliminating bank conflicts, minimizing the number of branches, and utilizing the
+% various memories appropriately (global, shared, texture, constant) are important
+% GPU optimizations. In contrast, common CPU optimizations include cache blocking
+% and vectorization.
 % In contrast, CPU optimizations include blocking at different memory levels and
 % arranging and aligning data for SSE / AVX operations.
 
-We will describe in the following subsections the current GPU architectures
-using CUDA terms and provide some brief guidelines for programming Nvidia cards.
+
 
 \subsection{GPU Architecture}
 
-GPUs don't have the complexity of the CPUs in terms of architectural
-improvements for smart control logic, like branch prediction or speculative
-execution. Instead they are heavily optimized for fast arithmetic operations and
-in consequence have many dedicated floating point units. Therefore, an important
-note to make is that not all applications are suitable for running on GPUs, or
-at least not as efficient as on CPUs, but only those that exhibit regular memory
-access pattern and require a great amount of computational power.
+GPUs are heavily optimized for fast arithmetic operations and in consequence
+have many dedicated floating point units. Therefore, an important note to make
+is that not all applications are suitable for running on GPUs, or at least not
+as efficient as on CPUs, but only those that exhibit regular memory access
+pattern and require a great amount of computational power.
+
+% GPUs do not have the complexity of the CPUs in terms of architectural
+% improvements for smart control logic, like branch prediction or speculative
+% execution. Instead they are heavily optimized for fast arithmetic operations and
+% in consequence have many dedicated floating point units. Therefore, an important
+% note to make is that not all applications are suitable for running on GPUs, or
+% at least not as efficient as on CPUs, but only those that exhibit regular memory
+% access pattern and require a great amount of computational power.
 
 The CUDA architecture from Nvidia is based on \textit{Streaming Multiprocessors}
 (SM), which are SIMD units with the role of creating, scheduling and executing
@@ -57,33 +79,36 @@ all these 32 threads execute the same instruction and very low when thread
 divergence caused by branching occurs. This is an important factor to consider
 when writing code for GPUs with performance in mind.
 
-The memory hierarchy is also different. Each thread has a small local private
-memory and each \textit{block} has a shared memory accessible by all threads in
-the \textit{block}. Specifically designed for graphics processing, the cards are
-also equipped with read-only, fast, on-chip memories like constant and texture
-caches which are used for different purposes. For example the first one is
-optimized for latency, while the second one for bandwidth. Finally, there is
-also the global memory which has the largest capacity, but is the slowest among
-all. Starting with the Fermi architecture, a finer level of control is possible
-for configuring how the allocations of these memories is done for the
-\textit{kernels}, giving the programmer more flexibility, but with the cost of
-exposing details and complexities of the underlying architecture.
+Each thread has a small local private memory and each \textit{block} has a
+shared memory accessible by all threads in the \textit{block}. Specifically
+designed for graphics processing, the cards are also equipped with read-only,
+fast, on-chip memories like constant and texture caches which are used for
+different purposes. For example the first one is optimized for latency, while
+the second one for bandwidth. Finally, there is also the global memory which has
+the largest capacity, but is the slowest among all. Starting with the Fermi
+architecture, a finer level of control is possible for configuring how the
+allocations of these memories is done for the \textit{kernels}, giving the
+programmer more flexibility, but with the cost of exposing details and
+complexities of the underlying architecture.
 
 \subsection{GPU Programming}
 
-Nvidia GPUs can be programmed through their dedicated framework, called CUDA.
-CUDA allows the programmer to define functions (\textit{kernels}) to be executed
-in parallel by many threads on different processors. When the \textit{kernels}
-are launched on the GPU, a given topology must be specified. Threads are
-grouped in \textit{thread blocks} which are laid in a grid. Each \textit{thread
-block} has an unique 2d index which gives its position in the grid, while each
-thread has a 3d index identifying the thread in a \textit{block}. This aspect
-allows uni-dimensional, bi-dimensional, and three-dimensional topologies, the
-right configuration being chosen depending on the problem to be solved. Threads
-in a \textit{block} are scheduled to be run on a single SM, fact that allows
-only the synchronization among the threads from a single \textit{block} using
-the \emph{\_\_syncthreads} barrier. Also, these threads can share data among
-themselves through the shared memory of the SM.
+While SIMD code on CPUs can be written using assembly code, a high-level
+language like C (with intrinsic functions), libraries such as Intel Array
+Building Blocks or just relying on a compiler with auto-vectorizing
+capabilities, Nvidia GPUs are usually  programmed through their dedicated
+framework, called CUDA. CUDA allows the programmer to define functions
+(\textit{kernels}) to be executed in parallel by many threads on different
+processors. When the \textit{kernels} are launched on the GPU, a given topology
+must be specified. Threads are grouped in \textit{thread blocks} which are laid
+in a grid. Each \textit{thread block} has an unique 2d index which gives its
+position in the grid, while each thread has a 3d index identifying the thread in
+a \textit{block}. This aspect allows uni-dimensional, bi-dimensional, and
+three-dimensional topologies, the right configuration being chosen depending on
+the problem to be solved. Threads in a \textit{block} are scheduled to be run on
+a single SM, fact that allows only the synchronization among the threads from a
+single \textit{block} using the \emph{\_\_syncthreads} barrier. Also, these
+threads can share data among themselves through the shared memory of the SM.
 
 Usually when choosing to write code for GPUs, performance is the most important
 reason for this decision. Optimizations address mostly thread scheduling and
