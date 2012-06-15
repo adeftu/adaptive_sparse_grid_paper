@@ -10,25 +10,6 @@ present them in the context of CPUs and GPUs. We group these optimizations into
 3 categories based on their end purpose: memory locality, vectorization, and
 operations with integers, synthesized in Table \ref{table:optimizations}.
 
-We start with a basic version of \textit{hierarchization} algorithm for GPU
-where we loop with $t$ variable over all dimensions, with $g$ variable over all
-\textit{groups} and then we call the kernel procedure. Each warp on the GPU
-computes the coefficients for one \textit{block} of the sparse grid in order to
-achieve a better cache locality and to reduce the thread divergence within
-warps. Because the coefficients for one \textit{block} are stored contiguously
-in memory, we also want for these values to be accessed simultaneously.
-Therefore, each thread within a warp starts reading at index equal to its lane
-and then subsequently every element found at a distance multiple of 32 (the
-number of threads within a warp). In this way, a warp will access the memory
-contiguously at each read instruction with an increased throughput. Here $l$ and
-$i$ are the \textit{levels} and respectively \textit{index} vectors which
-represent the coordinates of one point in the grid. We store them in the shared
-memory because they are frequently used. The routines \textit{left} and
-\textit{right} return the left and respectively right parents (\textit{blocks}
-that the current one depends on) of a point in dimension $t$, while
-\textit{agp2idx} returns the index where point $(l, i)$ is stored in the 1d
-representation of the sparse grid, $asg1d$.
-
 \begin{algorithm}[b]
 \small{
 	\caption{Hierarchization on GPU}
@@ -49,25 +30,45 @@ representation of the sparse grid, $asg1d$.
 	 		\For{$j \leftarrow \Call{BlockStart}{g} + lane;$ \\
 	 		    \hspace{24pt} $j < \Call{BlockEnd}{g}; \; j\leftarrow j + 32$}
 	 			\If{$lane = 0$}
-	 				\State $l \leftarrow idx2l(j)$
+	 				\State $\bar{l} \leftarrow idx2l(j)$
 	 			\EndIf
-	 			\State $i \leftarrow idx2i(j)$
-	 			\State $(\textit{ll}, \textit{il}) \leftarrow \text{left}(l, i, t)$
-	 			\State $(\textit{lr}, \textit{ir}) \leftarrow \text{right}(l, i, t)$
-	 			\State $\textit{v1} \leftarrow \textit{asg1d}[\text{agp2idx}(\textit{ll},
-	 			\textit{il})]$ \State $\textit{v2} \leftarrow
-	 			\textit{asg1d}[\text{agp2idx}(\textit{lr}, \textit{ir})]$ \State$\textit{asg1d}[j] \leftarrow \textit{asg1d}[j] - (\textit{v1} +\textit{v2}) \cdot 0.5$
+	 			\State $\bar{i} \leftarrow idx2i(j)$
+	 			\State $(\bar{ll}, \bar{il}) \leftarrow \text{left}(\bar{l},\bar{i}, t)$
+	 			\State $(\bar{lr}, \bar{ir}) \leftarrow \text{right}(\bar{l},\bar{i}, t)$
+	 			\State $v1 \leftarrow asg1d[\text{agp2idx}(\bar{ll},\bar{il})]$ 
+	 			\State $v2 \leftarrow asg1d[\text{agp2idx}(\bar{lr},\bar{ir})]$ 
+	 			\State $asg1d[j] \leftarrow asg1d[j] - (v1 + v2) \cdot 0.5$
 			\EndFor
 		\EndProcedure
 	\end{algorithmic}
 }
 \end{algorithm}
 
+We start with a basic version of \textit{hierarchization} algorithm for GPU
+where we loop with $t$ variable over all dimensions, with $g$ variable over all
+\textit{groups} and then we call the kernel procedure. Each warp on the GPU
+computes the coefficients for one \textit{block} of the sparse grid in order to
+achieve a better cache locality and to reduce the thread divergence within
+warps. Because the coefficients for one \textit{block} are stored contiguously
+in memory, we also want for these values to be accessed simultaneously.
+Therefore, each thread within a warp starts reading at index equal to its lane
+and then subsequently every element found at a distance multiple of 32 (the
+number of threads within a warp). In this way, a warp will access the memory
+contiguously at each read instruction with an increased throughput. Here $\bar{l}$ and
+$\bar{i}$ are the \textit{levels} and respectively \textit{index} vectors which
+represent the coordinates of one point in the grid. We store them in the shared
+memory because they are frequently used. The routines \textit{left} and
+\textit{right} return the left and respectively right parents (\textit{blocks}
+that the current one depends on) of a point in dimension $t$, while
+\textit{agp2idx} returns the index where point $(\bar{l}, \bar{i})$ is stored in
+the 1d representation of the sparse grid, $asg1d$.
+
 We now improve this basic algorithm and we start with optimizations for integer
-operations. The first observation we make is that computing the $l$ vector for
-each point in the \textit{block} is redundant because within a \textit{block},
-it has the same value. Therefore loop invariant code motion optimization
-\textit{inv1} moves the computation of $l$ outside the $j$ loop. 
+operations. The first observation we make is that computing the $\bar{l}$ vector
+for each point in the \textit{block} is redundant because within a
+\textit{block}, it has the same value. Therefore loop invariant code motion
+optimization \textit{inv1} moves the computation of $\bar{l}$ outside the $j$
+loop.
 
 Next, in \textit{inv2} we can compute for each \textit{block} of norm $g$ the
 indices in $asg1d$ of all $g-1$ parent \textit{blocks} before the innermost
@@ -76,17 +77,18 @@ implementation and in the shared memory of a CUDA multiprocessor for the GPU
 version). To get the values for these parent points, we can now use this array
 to index $asg1d$ and get the start of the \textit{block}. What we still need is
 the index inside the \textit{block}. This is computed inside the $j$ loop by
-converting $i$ to the corresponding index.
+converting $\bar{i}$ to the corresponding index.
 
-\textit{inv3} starts from the observation that $(ll, il)$ and $(lr, ir)$, the
-\textit{levels} and \textit{index} vectors of the left and right parents, differ
-from $l$ and $i$ of the current point only in one dimension. Therefore, the
-conversion mentioned above is not necessary anymore, thus reducing the
-complexity from $O(D)$ to $O(1)$.
+\textit{inv3} starts from the observation that $(\bar{ll}, \bar{il})$ and
+$(\bar{lr}, \bar{ir})$, the \textit{levels} and \textit{index} vectors of the
+left and right parents, differ from $\bar{l}$ and $\bar{i}$ of the current point
+only in one dimension. Therefore, the conversion mentioned above is not
+necessary anymore, thus reducing the complexity from $O(D)$ to $O(1)$.
 
 Now, in the innermost loop over the current \textit{block}, what is left to
-compute is the conversion $(l(t), i(t)) \rightarrow (ll(t), il(t))$ and $(l(t),
-i(t)) \rightarrow (lr(t), ir(t))$ which has a complexity of $O(l(t))$.
+compute is the conversion $(\bar{l}(t), \bar{i}(t)) \rightarrow (\bar{ll}(t),
+\bar{il}(t))$ and $(\bar{l}(t), \bar{i}(t)) \rightarrow (\bar{lr}(t),
+\bar{ir}(t))$ which has a complexity of $O(\bar{l}(t))$.
 \textit{inv4} precomputes the results of these conversions before the kernel
 launch and stores them in an array. The advantage is that the complexity of the
 innermost loop is now $O(1)$, but at a cost of higher memory footprint.
@@ -106,7 +108,7 @@ loops traverse \textit{groups} and \textit{blocks} respectively.
 $\textit{idx23}$ is used to index the beginning of the current \textit{block} in
 $\textit{asg1d}$, while $idx1$ idexes the current point in this \textit{block}.
 
-\begin{algorithm}[b]
+\begin{algorithm}[t]
 \small{
 	\caption{Evaluation on GPU}
 	\label{alg:evaluation}
@@ -120,11 +122,11 @@ $\textit{asg1d}$, while $idx1$ idexes the current point in this \textit{block}.
 						\State $\textit{idx1} \leftarrow 0$
 						\State $\textit{p} \leftarrow 1$
 						\If{$threadIdx.x = 0$}
-							\State Compute $l$ for which $\text{pos}(l) = b$
+							\State Compute $\bar{l}$ for which $\text{pos}(\bar{l}) = b$
 						\EndIf
 						\For{$t=1$ to $D$}
-							\State $div \leftarrow 2^{-l[t]}$
-							\State $\textit{idx1} \leftarrow \textit{idx1} \cdot 2^{l[t]} + \lfloor	x[j][t] / div \rfloor$
+							\State $div \leftarrow 2^{-\bar{l}[t]}$
+							\State $\textit{idx1} \leftarrow \textit{idx1} \cdot 2^{\bar{l}[t]} + \lfloor	x[j][t] / div \rfloor$
 							\State $left \leftarrow \lfloor x[j][t] / div \rfloor \cdot div$
 							\State $right \leftarrow left + div$
 							\State $p \leftarrow p \cdot basis(left, right, x[j][t])$
@@ -170,9 +172,10 @@ The last optimization is a combination of strength reduction and loop invariant
 code motion introduced in order to speed up integer operations. \textit{sred1}
 precomputes all divisions in lines 12-16 outside the innermost loop and replaces
 them with multiplications with the inverse. In addition, $idx1 \leftarrow
-idx1 \cdot 2^{l[t]} + \lfloor x[j][t] / div \rfloor$ from line 13 is
-replaced with $idx1 \leftarrow idx1 + \lfloor x[j][t] / 2^{l[t]} \rfloor
-\cdot 2^{prefix\_sums[t + 1]}$, where $prefix\_sums[p] = \sum_{p=t}^{D-1}l[p]$.
+idx1 \cdot 2^{\bar{l}[t]} + \lfloor x[j][t] / div \rfloor$ from line 13 is
+replaced with $idx1 \leftarrow idx1 + \lfloor x[j][t] / 2^{\bar{l}[t]} \rfloor
+\cdot 2^{\textit{prefix\_sums}[t + 1]}$, where $\textit{prefix\_sums}[p] =
+\sum_{p=t}^{D-1}\bar{l}[p]$.
 This makes indexing a normal reduction and increases the instruction level
 parallelism.
 
