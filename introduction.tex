@@ -17,9 +17,7 @@ FMAD). Compute Unified Device Architecture (CUDA) is an option for programming
 Nvidia GPUs. The vector units are not directly visible in CUDA. The SIMD nature
 of GPUs reveals itself when applying various optimizations, e.g. for bank
 conflicts and memory access coalescing \cite{cuda}. This view of GPUs as vector
-processors is at the foundation of \cite{Volkov:2008:BGT:1413370.1413402}. The
-tuning strategy presented there was afterwards included in the \textit{cublas}
-library from Nvidia.
+processors is at the foundation of \cite{Volkov:2008:BGT:1413370.1413402}.
 
 When reasoning about code transformations that improve performance on a wide
 range of architectures, we do not want to lose ourselves in the details of the
@@ -31,21 +29,20 @@ sequence of transformations remains the same. To simplify the porting of
 applications from one architecture to another, it is essential to determine the
 common and different aspects of the architectures and map the optimizations
 accordingly. As an example, CPUs and GPUs have vector units and
-Array-Of-Structures (AOS) to Structure-Of-Arrays (SOA) is a transformation that
-often is required by both. Given the convergence of CPUs and GPUs seen in CPUs
-that have doubled the width of the SIMD units and GPUs that received 2 level,
-coherent caches \cite{fermi}, we expect that more transformations, e.g. for
-locality, to be shared between codes for CPUs and GPUs.
+array-of-structures to structure-of-arrays is a transformation that often is
+required by both. Given the convergence of CPUs and GPUs seen in CPUs that have
+doubled the width of the SIMD units and GPUs that received 2 level coherent
+caches \cite{fermi}, we expect that more transformations, e.g. for locality, to
+be shared between codes for CPUs and GPUs.
 
-To test these concepts, we consider a computational steering application. The
-main goal in this application is to allow for a smooth, real-time interaction
-with compressed simulation data. We have two phases (or algorithms) being at the
-core of the compression and decompression of the simulation data. These
-algorithms are in fact based on a numerical method called the sparse grid
-technique which allows for a hierarchical and efficient representation of
-high-dimensional functions, similar to wavelet series. Using it, it was shown
-that sheer amounts of simulation data can be managed efficiently
-\cite{Butnaru201156}.
+To test these concepts, we consider a computational steering application, the
+main goal of which is to allow for a smooth, real-time interaction with
+compressed simulation data. We have two phases (or algorithms) being at the core
+of the compression and decompression of the simulation data. These algorithms
+are in fact based on a numerical method called the sparse grid technique which
+allows for a hierarchical and efficient representation of high-dimensional
+functions, similar to wavelet series. Using it, it was shown that sheer amounts
+of simulation data can be managed efficiently \cite{Butnaru201156}.
 
 For enhanced performance, it was important to benefit from the latest
 developments in hardware. But starting from scratch with every hardware release
@@ -53,7 +50,7 @@ is far from being a productive approach. Instead, what we followed was to
 develop optimizations for loops and data layout at the same level at which we
 develop algorithms. We realized that many of the transformations we are applying
 are valid for both CPUs and GPUs, considering the above mentioned view of GPUs
-as a vector processors. Moreover, we consider that our study is important giving
+as vector processors. Moreover, we consider that our study is important giving
 that more and more programming models are emerging and the open question is if
 we can design optimizations which are portable across processor architectures.
 The main contributions of our paper are as follows:
