@@ -95,7 +95,7 @@ grid will be stored efficiently in a 1-dimensional array.
 
 Interpolating at a given $D$-dimensional point means traversing the set of
 regular grids and computing the contribution of each regular grid on the result. For
-each regular grid a $D$-linear basis function ($\Otime{D}$) is built and
+each regular grid a $D$-linear basis function ($\mathcal{O}(D)$) is built and
 evaluated at the point. Interpolating at one point uses exactly one value from each
 regular grid for scaling the basis function. Using this knowledge, we can now
 look at the influence of the inputs on performance. All of these parameters

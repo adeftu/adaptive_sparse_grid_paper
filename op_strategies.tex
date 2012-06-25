@@ -66,7 +66,7 @@ from lines 10-11 return the left and respectively right parents (\textit{blocks}
 that the current one depends on) of a point in dimension $t$, while
 \textit{agp2idx} returns the index where point $(\bar{l}, \bar{i})$ is stored in
 the 1d representation of the sparse grid, \textit{asg1d}. The statements in
-lines 12-13 exhibit a non-sequential memory access patern.
+lines 12-13 exhibit a non-sequential memory access pattern.
 
 We now improve this basic algorithm with the goal of exploiting our data
 structure and \textit{block}-level decomposition. We start with optimizations
@@ -89,15 +89,17 @@ converting $\bar{i}$ to the corresponding index.
 $(\bar{lr}, \bar{ir})$, the \textit{levels} and \textit{index} vectors of the
 left and right parents, differ from $\bar{l}$ and $\bar{i}$ of the current point
 only in one dimension. Therefore, the conversion mentioned above is not
-necessary anymore, thus reducing the complexity from $O(D)$ to $O(1)$.
+necessary anymore, thus reducing the complexity from $\mathcal{O}(D)$ to
+$\mathcal{O}(1)$.
 
 Now, in the innermost loop over the current \textit{block}, what is left to
 compute is the conversion $(\bar{l}(t), \bar{i}(t)) \rightarrow (\bar{ll}(t),
 \bar{il}(t))$ and $(\bar{l}(t), \bar{i}(t)) \rightarrow (\bar{lr}(t),
-\bar{ir}(t))$ which has a complexity of $O(\bar{l}(t))$.
+\bar{ir}(t))$ which has a complexity of $\mathcal{O}(\bar{l}(t))$.
 \textit{inv4} precomputes the results of these conversions before the kernel
 launch and stores them in an array. The advantage is that the complexity of the
-innermost loop is now $O(1)$, but at a cost of higher memory footprint.
+innermost loop is now $\mathcal{O}(1)$, but at a cost of higher memory
+footprint.
 
 Lastly, in order to improve memory locality and the data access patterns,
 \textit{ichg1} optimization does a loop interchange by moving the loop over the
