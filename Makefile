@@ -1,6 +1,6 @@
 SRCS = comp_steering.tex  evaluation.tex    loop_transf.tex    related_work.tex \
        conclusion.tex     introduction.tex  ltg.tex \
-       cpus_vs_gpus.tex   lessons.tex       op_strategies.tex \
+       cpus_vs_gpus.tex   op_strategies.tex \
        refs.bib
 
 all: ltg.pdf
