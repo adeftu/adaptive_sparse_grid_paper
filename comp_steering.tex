@@ -33,50 +33,66 @@ $h$ is the standard hat function $h(x) = max(1 - |x|, 0)$:
 Compressing a general function represented on a full grid is done by selecting
 only the function values at grid points also contained in a sparse grid. This is
 reduced to computing the hierarchical coefficients, process called
-\textit{hierarchization}. The method is somehow related to wavelet
-transformation technique, where the computing and grouping the coefficients
-leads to different levels of compression and thus an incremental representation.
-Decompression (or \textit{interpolation}) refers to evaluating the function
-anywhere inside the domain by summing up the contributions of the basis
-functions averaged by their hierarchical coefficients. This technique also
-enables us to interpolate at points for which we do not have values from
-simulation. Hence, it can provide hints on the simulation outside the initial
-data. In our case, decompression is a form of interpolation based on the sparse
-grid technique described in \cite{CambridgeJournals:227245}. To allow a fluent
-interaction with data, interpolation has to run as fast as possible. This is
-equivalent to ensuring that no processor in a heterogeneous system is idle at
-any moment of time and that each processor is used at its full potential.
+\textit{hierarchization}. Decompression (or \textit{interpolation}) refers to
+evaluating the function anywhere inside the domain by summing up the
+contributions of the basis functions averaged by their hierarchical
+coefficients. This technique also enables us to interpolate at points for which
+we do not have values from simulation. Hence, it can provide hints on the
+simulation outside the initial data. In our case, decompression is a form of
+interpolation based on the sparse grid technique described in
+\cite{CambridgeJournals:227245}. To allow a fluent interaction with data,
+interpolation has to run as fast as possible.
 
 \begin{figure}[t]
   \begin{subfigure}[b]{1\linewidth}
     \centering
-    \includegraphics[width=0.8\textwidth]{truncated_sparse_grid_deco_1.pdf}
+    \includegraphics[width=0.9\textwidth]{truncated_sparse_grid_deco_1.pdf}
     \caption{Regular sparse grid.}
+    \label{fig:truncated_sparse_grid_deco_1}
   \end{subfigure}
   \\ \\
   \begin{subfigure}[b]{1\linewidth}
     \centering
-    \includegraphics[width=0.8\textwidth]{truncated_sparse_grid_deco_2.pdf}
+    \includegraphics[width=0.9\textwidth]{truncated_sparse_grid_deco_2.pdf}
     \caption{Dimensionally truncated sparse grid.}
+    \label{fig:truncated_sparse_grid_deco_2}
   \end{subfigure}
   \caption{Decomposition of regular and dimensionally truncated 2D sparse
   grids.}
   \label{fig:truncated_sparse_grid_deco}
 \end{figure}
 
+\subsection{Compression}
+
 It is important that sparse grids should not be confused with sparse matrices.
 They differ in both functionality and computational behavior. As mentioned,
-sparse grids allow us to approximate multi-dimensional functions. Instead of
-using the traditional approach of storing them in trees and hash-tables, we are
-using bijection based data structure with minimum memory footprint
+sparse grids allow us to approximate multi-dimensional functions. The method is
+somehow related to wavelet transformation technique \cite{Mallat89atheory},
+where the computing and grouping the coefficients leads to different levels of
+compression and thus an incremental representation. Similar to wavelet
+compression, we also have here a hierarchical representation which corresponds
+to different levels of detail. The contribution of the coefficients reduces as
+this compression level increases.
+
+Compression the multi-dimensional function means computing the hierarchical
+coefficients, in a traditionally recursive manner by collecting the
+contributions of all points and evaluating the basis functions in each
+dimension. Using the data structure and bijection mentioned above, we can use an
+iterative memory-bound algorithm for compression which is also suitable for
+GPUs.
+
+Fig.~\ref{fig:truncated_sparse_grid_deco_1} shows how a sparse grid can be
+represented as a sequence of regular grids, grouped by their norm into several
+refinement levels, which we'll call them \textit{groups} from now on. The grids
+in one \textit{group} will be referred as \textit{blocks}. Instead of using the
+traditional approach of storing the grids in trees and hash-tables, we are using
+bijection based data structure with minimum memory footprint
 \cite{Murarasu:2011:CDS:1941553.1941559}, which maps all $(\bar{l},\bar{i})$
 pairs to consecutive integer indices. Thus, all hierarchical coefficients of the
 grid will be stored efficiently in a 1-dimensional array.
 
-Fig.~\ref{fig:truncated_sparse_grid_deco} shows that a sparse grid can be
-represented as a sequence of regular grids, grouped by their norm into several
-refinement levels, which we'll call them \textit{groups} from now on. The grids
-in one \textit{group} will be referred as \textit{blocks}.
+\subsection{Decompression}
+
 Interpolating at a given $D$-dimensional point means traversing the set of
 regular grids and computing the contribution of each regular grid on the result. For
 each regular grid a $D$-linear basis function ($\Otime{D}$) is built and
@@ -107,7 +123,13 @@ PCIe.
 The dimensional truncation parameter gives the possibility of reducing the
 computational effort when using functions where not all input variables carry
 equal weight. Therefore, instead of storing all regular grids, we can exclude
-some of them when the information on those dimensions is not critical.
+some of them when the information on those dimensions is not critical (see Fig.
+\ref{fig:truncated_sparse_grid_deco_2}). In our case, this translates to
+restricting the components of the $\bar{l}$ vector. An analogy can be made with
+image compression. Usually images are not squares, but rectangular in shape,
+having the width twice the size of their height. Going back to our sparse grids
+domain, we can thus use a refinement level in one dimension (width) equal to 2x
+the refinement level in the other dimension (height).
 
 Our versions of interpolation are based on the iterative algorithm from
 \cite{Murarasu:2011:CDS:1941553.1941559} over which we applied a series of
