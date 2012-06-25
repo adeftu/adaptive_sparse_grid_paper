@@ -50,16 +50,16 @@ cases. With the increase in the number of dimensions and the decrease of the
 sparse grid size, the speedup for GPU tends to decrease. This happens because
 the effects of most of the optimizations (e.g. improving caching and memory
 access patterns) are visible when a high degree of parallelism is achieved,
-situation which happens in the case of large grids. Thus, this context is a good
-opportunity for the use of auto-tuning techniques in order to choose at runtime
-the right hardware in a heterogeneous system for running the algorithm. It is
-also interesting to notice that \textit{inv4} brings a drop of performance when
-applied on top of the other optimizations for CPU. This means that when the
-grids are smaller then it is better to actually do the computations instead of
-doing memory lookups, which may result in cache misses. Lastly, we show that a
-speedup of 17x is obtained for the most performant GPU version compared to the
-corresponding CPU-based one and a speedup of 6.2x compared to the state of the
-art GPU version~\cite{Murarasu:2011:CDS:1941553.1941559}.
+situation which happens in the case of large grids. It is also interesting to
+notice that \textit{inv4} brings a drop of performance when applied on top of
+the other optimizations for CPU, although for GPU it brings a speedup. This
+means that when the grids are smaller then it is better to actually do the
+computations instead of doing memory lookups, which may result in cache misses.
+Giving this empirical optimization, a heterogeneous system could activate or
+deactivate it at runtime based on the architecture and compiler used. Lastly, we
+show that a speedup of 17x is obtained for the most performant GPU version
+compared to the corresponding CPU-based one and a speedup of 6.2x compared to
+the state-of-the-art GPU version~\cite{Murarasu:2011:CDS:1941553.1941559}.
 
 \begin{figure}[t]
   \begin{subfigure}[b]{1\linewidth}
@@ -78,16 +78,23 @@ art GPU version~\cite{Murarasu:2011:CDS:1941553.1941559}.
 \end{figure}
 
 For the \textit{evaluation} algorithm, we used $10^{4}$ for CPU and $10^{6}$
-for GPU random points, uniformly distributed in the function domain. We
-empirically observed that for CPU the GFlops rate remains constant when
-increasing the number of interpolation points. The results of our tests are
-presented in Fig.~\ref{fig:eval_results}. Compared to the CPU versions, the
-optimizations for GPU are not that effective. The main reason for this is that
-giving the high memory requirement for storing the interpolation points, we used
-the GPU main memory. Although caching is performed, we believe that a higher
-throughput could be obtained if we could have stored the results in shared
-memory. The optimization which brings a clear speedup is \textit{sred1} showing
-that division instructions are still very expensive on GPUs, fact also
-emphasized by \cite{cuda}. The GPU version is 28.3x faster than the CPU
-one which confirms that sparse grids interpolation technique is cache friendly
-and easily parallelizable using our data structure.
+for GPU random points, uniformly distributed in the function domain. Here we
+make two empirical observations. First, the GFlops rate for CPU remains constant
+when increasing the number of interpolation points. Second, we used 8 chunk
+sizes (number of interpolation points) for each warp: 32, 64, 96, 128, 160, 192,
+224, and 256, but chose only the most performant in each case. A pattern could
+not be observed, results varying from configuration to configuration and also
+between various optimizations.
+
+The results of our tests are presented in Fig.~\ref{fig:eval_results}. Compared
+to the CPU versions, the optimizations for GPU are not that effective. The main
+reason for this is that giving the high memory requirement for storing the
+interpolation points, we used the GPU main memory. Although caching is
+performed, we believe that a higher throughput could be obtained if we could
+have stored the results in shared memory. The optimization which brings a clear
+speedup is \textit{sred1} showing that division instructions are still very
+expensive on GPUs, fact also emphasized by \cite{cuda}. The GPU version is 28.3x
+faster than the CPU one which confirms that sparse grids interpolation technique
+is cache friendly and easily parallelizable using our data structure. Compared
+to the state-of-the-art GPU version~\cite{Murarasu:2011:CDS:1941553.1941559}, a
+speedup of 1.5x is obtained for this algorithm.
