@@ -10,9 +10,11 @@ present them in the context of CPUs and GPUs. We group these optimizations into
 3 categories based on their end purpose: memory locality, vectorization, and
 operations with integers, synthesized in Table \ref{table:optimizations}.
 
+\subsection{Compression}
+
 \begin{algorithm}[b]
 \small{
-	\caption{Hierarchization on GPU}
+	\caption{Compression on GPU}
  	\label{alg:hierarchization}                       
 
  	\begin{algorithmic}[1]
@@ -35,9 +37,9 @@ operations with integers, synthesized in Table \ref{table:optimizations}.
 	 			\State $\bar{i} \leftarrow idx2i(j)$
 	 			\State $(\bar{ll}, \bar{il}) \leftarrow \text{left}(\bar{l},\bar{i}, t)$
 	 			\State $(\bar{lr}, \bar{ir}) \leftarrow \text{right}(\bar{l},\bar{i}, t)$
-	 			\State $v1 \leftarrow asg1d[\text{agp2idx}(\bar{ll},\bar{il})]$ 
-	 			\State $v2 \leftarrow asg1d[\text{agp2idx}(\bar{lr},\bar{ir})]$ 
-	 			\State $asg1d[j] \leftarrow asg1d[j] - (v1 + v2) \cdot 0.5$
+	 			\State $v1 \leftarrow \textit{asg1d}[\text{agp2idx}(\bar{ll},\bar{il})]$ 
+	 			\State $v2 \leftarrow \textit{asg1d}[\text{agp2idx}(\bar{lr},\bar{ir})]$ 
+	 			\State $\textit{asg1d}[j] \leftarrow \textit{asg1d}[j] - (v1 + v2) \cdot 0.5$
 			\EndFor
 		\EndProcedure
 	\end{algorithmic}
@@ -51,31 +53,35 @@ computes the coefficients for one \textit{block} of the sparse grid in order to
 achieve a better cache locality and to reduce the thread divergence within
 warps. Because the coefficients for one \textit{block} are stored contiguously
 in memory, we also want for these values to be accessed simultaneously.
-Therefore, each thread within a warp starts reading at index equal to its lane
-and then subsequently every element found at a distance multiple of 32 (the
+Therefore, in loop $j$, each thread within a warp starts reading at index equal
+to its lane and then subsequently every element found at a distance multiple of 32 (the
 number of threads within a warp). In this way, a warp will access the memory
-contiguously at each read instruction with an increased throughput. Here $\bar{l}$ and
-$\bar{i}$ are the \textit{levels} and respectively \textit{index} vectors which
-represent the coordinates of one point in the grid. We store them in the shared
-memory because they are frequently used. The routines \textit{left} and
-\textit{right} return the left and respectively right parents (\textit{blocks}
+contiguously at each read instruction with an increased throughput. In lines
+8-9 we use the bijection to move from the global index of the grid point to
+$(\bar{l}, \bar{i})$, the \textit{levels} and respectively \textit{index}
+vectors representing the coordinates of one point in the grid. We store them in the
+shared memory because they are frequently used. The bijection functions use many
+integer-only operations. The routines \textit{left} and \textit{right}
+from lines 10-11 return the left and respectively right parents (\textit{blocks}
 that the current one depends on) of a point in dimension $t$, while
 \textit{agp2idx} returns the index where point $(\bar{l}, \bar{i})$ is stored in
-the 1d representation of the sparse grid, $asg1d$.
+the 1d representation of the sparse grid, \textit{asg1d}. The statements in
+lines 12-13 exhibit a non-sequential memory access patern.
 
-We now improve this basic algorithm and we start with optimizations for integer
-operations. The first observation we make is that computing the $\bar{l}$ vector
-for each point in the \textit{block} is redundant because within a
-\textit{block}, it has the same value. Therefore loop invariant code motion
-optimization \textit{inv1} moves the computation of $\bar{l}$ outside the $j$
-loop.
+We now improve this basic algorithm with the goal of exploiting our data
+structure and \textit{block}-level decomposition. We start with optimizations
+for integer operations. The first observation we make is that computing the
+$\bar{l}$ vector for each point in the \textit{block} is redundant because
+within a \textit{block}, it has the same value. Therefore loop invariant code
+motion optimization \textit{inv1} moves the computation of $\bar{l}$ outside the
+$j$ loop.
 
 Next, in \textit{inv2} we can compute for each \textit{block} of norm $g$ the
-indices in $asg1d$ of all $g-1$ parent \textit{blocks} before the innermost
+indices in \textit{asg1d} of all $g-1$ parent \textit{blocks} before the innermost
 loop. We store them in an array (in the heap space in the case of CPU
 implementation and in the shared memory of a CUDA multiprocessor for the GPU
 version). To get the values for these parent points, we can now use this array
-to index $asg1d$ and get the start of the \textit{block}. What we still need is
+to index \textit{asg1d} and get the start of the \textit{block}. What we still need is
 the index inside the \textit{block}. This is computed inside the $j$ loop by
 converting $\bar{i}$ to the corresponding index.
 
@@ -98,19 +104,25 @@ Lastly, in order to improve memory locality and the data access patterns,
 \textit{groups} from line 2 inside the kernel. In this way, one warp will not
 only process one \textit{block}, but also all its parents.
 
+\subsection{Decompression}
+
 We move now to the algorithm for \textit{evaluation}. The coordinates of all $N$
 points to be evaluated are stored contiguously in a matrix $x[N][D]$ which is
-processed in chunks by each warp, each warp computing one chunk of size $w$. The
-memory access pattern for one thread inside of its chunk is the same as for
-\textit{hierarchization} algorithm where each thread computes points stored at
-indices multiple of 32 starting from the corresponding lane. The $g$ and $b$
-loops traverse \textit{groups} and \textit{blocks} respectively.
-$\textit{idx23}$ is used to index the beginning of the current \textit{block} in
-$\textit{asg1d}$, while $idx1$ idexes the current point in this \textit{block}.
+processed in chunks by each warp, each warp computing one chunk of size $w$ in
+loop $j$. The memory access pattern for one thread inside of its chunk is the
+same as for \textit{hierarchization} algorithm where each thread computes points
+stored at indices multiple of 32 starting from the corresponding lane. The $g$
+and $b$ loops traverse \textit{groups} and \textit{blocks} respectively.
+\textit{idx23} is used to index the beginning of the current \textit{block} in
+\textit{asg1d}, while \textit{idx1} idexes the current point in this
+\textit{block}. In line 13 we compute the coefficient position, while in line 16
+we evaluate the basis function in that point. Line 17 updates the current value
+of the coefficient exploiting the \textit{block}-level structure and exhibiting
+a non-sequential memory access patern.
 
 \begin{algorithm}[t]
 \small{
-	\caption{Evaluation on GPU}
+	\caption{Decompression on GPU}
 	\label{alg:evaluation}
 	\begin{algorithmic}[1]
  		\Procedure{EvaluateKernel}{$w$}
@@ -169,15 +181,14 @@ improve read accesses by having the innermost loop as tight as possible over the
 block of memory.
 
 The last optimization is a combination of strength reduction and loop invariant
-code motion introduced in order to speed up integer operations. \textit{sred1}
-precomputes all divisions in lines 12-16 outside the innermost loop and replaces
-them with multiplications with the inverse. In addition, $idx1 \leftarrow
-idx1 \cdot 2^{\bar{l}[t]} + \lfloor x[j][t] / div \rfloor$ from line 13 is
-replaced with $idx1 \leftarrow idx1 + \lfloor x[j][t] / 2^{\bar{l}[t]} \rfloor
-\cdot 2^{\textit{prefix\_sums}[t + 1]}$, where $\textit{prefix\_sums}[p] =
-\sum_{p=t}^{D-1}\bar{l}[p]$.
-This makes indexing a normal reduction and increases the instruction level
-parallelism.
+code motion introduced in order to speed up arithmetic operations.
+\textit{sred1} precomputes all divisions in lines 12-16 outside the innermost
+loop and replaces them with multiplications with the inverse. In addition, $idx1
+\leftarrow idx1 \cdot 2^{\bar{l}[t]} + \lfloor x[j][t] / div \rfloor$ from line
+13 is replaced with $idx1 \leftarrow idx1 + \lfloor x[j][t] / 2^{\bar{l}[t]}
+\rfloor \cdot 2^{\textit{prefix\_sums}[t + 1]}$, where $\textit{prefix\_sums}[p]
+= \sum_{p=t}^{D-1}\bar{l}[p]$. This makes indexing a normal reduction and
+increases the instruction level parallelism.
 
 \begin{center}
 \begin{table*}[t]

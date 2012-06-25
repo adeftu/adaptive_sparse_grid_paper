@@ -1,23 +1,26 @@
 \section{Related Work}
 \label{sec:related_work}
-A compact data structure and efficient in-place algorithms for regular sparse
-grids were presented in \cite{Murarasu:2011:CDS:1941553.1941559} and further
-extended to support dimensionally truncated sparse grids on CPUs in
-\cite{murarasu12fastsg:}. In this paper we start from these basic algorithms for
-dimensionally truncated sparse grids and implement new ones for GPUs. In
-addition, we present a set of loop transformations for increasing the
-performance on both CPUs and GPUs.
+The fundamentals of sparse grids are known in computer science and this
+technique has already been exploited for a series of applications
+\cite{CambridgeJournals:227245}.
+
+A compact data structure with minimal memory consumption and efficient
+algorithms for regular sparse grids were presented in
+\cite{Murarasu:2011:CDS:1941553.1941559}. Further support for dimensionally
+truncated sparse grids on CPUs was added in \cite{murarasu12fastsg:}, giving the
+flexibility to treat dimensions differently, by allowing more or less
+discretization points, and thus to control the refinement level in some
+dimensions. In this paper we start from these basic algorithms for dimensionally
+truncated sparse grids and implement new ones for GPUs. In addition, we present
+a set of loop transformations for increasing the performance on both CPUs and
+GPUs.
 
 A set of techniques for efficient programming of hybrid systems in the context
 of dense linear algebra were presented in \cite{Tomov:2010:TDL:1805333.1805388}.
 Here they show how the computation can be split for a better exploitation of
 each device, but do not address the problem of programming CPUs and GPUs using a
-set of common features. However, we believe that auto-tuning and in particular
-runtime auto-tuning would have a good support in hybrid systems in the years to
-come.
+set of common features.
 
 Also related to this field of study is the work from
 \cite{Augonnet:2011:SUP:1951453.1951454}, which shows techniques for efficiently
-exploiting heterogeneous systems through an uniform execution model. This would
-allow the design of kernels for executing tasks in parallel and provide some
-auto-tuning through scheduling algorithms.
+exploiting heterogeneous systems through a uniform execution model.
