@@ -22,10 +22,10 @@ provide some brief guidelines for programming Nvidia cards.
 \subsection{GPU Architecture}
 
 GPUs are heavily optimized for fast arithmetic operations and in consequence
-have many dedicated floating point units. Therefore, an important note to make
-is that not all applications are suitable for running on GPUs, or at least not
-as efficient as on CPUs, but only those that exhibit regular memory access
-pattern and require a great amount of computational power.
+have many dedicated floating point units. Therefore, not all applications are
+suitable for running on GPUs, or at least not as efficient as on CPUs, but only
+those that exhibit regular memory access pattern and require a great amount of
+computational power.
 
 The CUDA architecture from Nvidia is based on \textit{Streaming Multiprocessors}
 (SM), which are SIMD cores with the role of creating, scheduling and executing
@@ -64,12 +64,12 @@ processors. When the \textit{kernels} are launched on the GPU, a given topology
 must be specified. Threads are grouped in \textit{thread blocks} which are laid
 in a grid. Each \textit{thread block} has an unique 2d index which gives its
 position in the grid, while each thread has a 3d index identifying the thread in
-a \textit{block}. This aspect allows uni-dimensional, bi-dimensional, and
-three-dimensional topologies, the right configuration being chosen depending on
-the problem to be solved. Threads in a \textit{block} are scheduled to be run on
-a single SM, fact that allows only the synchronization among the threads from a
-single \textit{block} using the \emph{\_\_syncthreads} barrier. Also, these
-threads can share data among themselves through the shared memory of the SM.
+a \textit{block}. This aspect allows uni-, bi-, and three-dimensional
+topologies, the right configuration being chosen depending on the problem to be
+solved. Threads in a \textit{block} are scheduled to be run on a single SM, fact
+that allows only the synchronization among the threads from a single
+\textit{block} using the \emph{\_\_syncthreads} barrier. Also, these threads can
+share data among themselves through the shared memory of the SM.
 
 Usually when choosing to write code for GPUs, performance is the most important
 reason for this decision. Optimizations address mostly thread scheduling and
@@ -82,25 +82,3 @@ on-chip memories whenever possible, to reduce the number of bank conflicts when
 accessing the shared memory and to reduce the number of memory transactions to
 main memory through coalescing. We applied these optimizations to our
 application, but for a detailed list we refer the reader to \cite{cuda}.
-
-% The number of active threads is not the same for all applications. An
-% optimization direction for GPU programs consists in maximizing the number of
-% active threads. This is typically achievable by reducing the register and
-% shared memory consumption per thread.
-
-% Nvidia GPUs have a Single Instruction Multiple Thread (SIMT) architecture. The
-% SM's control unit creates, manages and executes synchronously the threads in
-% groups of 32 called warps. Every instruction is broadcast synchronously to all
-% the active threads in a warp. In this context, divergence caused by branches
-% may serialize the execution of the threads composing a warp. To improve the
-% performance, the number of divergent branches needs to be minimized.
-
-% GPUs have multiple fast memories on the chip: constant cache, texture cache
-% and shared memory\cite{ryo2008}. Exploiting the memory hierarchy properly is
-% another direction for optimizing CUDA programs.
-
-% GPUs have their own dedicated memory which is in the order of several
-% Gigabytes, e.g. Tesla has 4 GB of memory. Minimizing the memory consumption is
-% also an optimization that should be considered by a CUDA developer.
-
-% Recursive function are not allowed on GPUs\cite{cuda}. 
