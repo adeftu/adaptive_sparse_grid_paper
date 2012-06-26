@@ -7,15 +7,10 @@ compiler to handle loop transformations. An overview of loop transformations
 performed by the compiler is presented in \cite{Bacon:1994:CTH:197405.197406}.
 We cover in our paper only a subset of those optimizations relevant for our
 discussion and our routines. Specifically, we focus on optimizations that
-exploit the deep memory hierarchy of modern processors, that make use of the
-instruction parallelism provided by the hardware, and those that decrease the
-number of instructions executed.
-
-A developer that aims at obtaining maximum performance from an architecture
-should not rely solely on the compiler for optimizations. Based on their
-purpose, we group these optimizations into several categories: for improving the
-memory access, optimizations that do loop restructuring and those that help
-vectorization.
+improve memory access by exploiting the deep memory hierarchy of modern
+processors, that make use of the instruction parallelism provided by the
+hardware through loop restructuring, and those that decrease the number of
+instructions executed and help vectorization.
 
 \subsection{Memory Locality}
 
@@ -31,17 +26,15 @@ chosen in such manner that it fits into the cache, which would allow to assign
 one or more tiles to each microprocessor. Aggressive tiling is done for all the
 levels of memory, including registers, Level-1 cache, Level-2 cache, etc. The
 complexity of caches complicates compiler's task to produce efficient loop
-tiling transformations. This is actually what motivates the existence of
-auto-tuners that aim to better match tile sizes with the memory levels. An
-example of application for this kind of transformation on GPUs is stencil codes
-\cite{volkov2010}, which was firstly developed for CPUs. In the same category of
-loop transformations that enhance locality, there is also \textit{loop
-interchange}. This is a transformation that exchanges the position of two loops
-so that the access to memory is improved, i.e. fewer cache and TLB misses.
-Sometimes, because the number of iterations of a loop is not known at compile
-time, the compiler cannot determine the best permutation of loops. Complex data
-dependencies resulting from complex array subscripts can also limit the
-applicability of this optimization since the compiler needs to prove that a
+tiling transformations. An example of application for this kind of
+transformation on GPUs is stencil codes \cite{volkov2010}, which was first
+developed for CPUs. In the same category of loop transformations that enhance
+locality, there is also \textit{loop interchange}, which exchanges the position
+of two loops so that the access to memory is improved, i.e. fewer cache and TLB
+misses. Sometimes, because the number of iterations of a loop is not known at
+compile time, the compiler cannot determine the best permutation of loops.
+Complex data dependencies resulting from complex array subscripts can also limit
+the applicability of this optimization since the compiler needs to prove that a
 given optimization preserves the semantics of the unoptimized code. This is
 actually a general rule followed by all compiler transformations. A study about
 automatic loop interchange on GPUs is presented in
@@ -83,14 +76,12 @@ through vectorization performed by compilers. However, there are several factors
 that limit compilers' ability to vectorize a loop. As with other optimizations
 performed by compilers, it is important for compilers to get a correct view of
 data dependencies before deciding to vectorize a loop. Using pointers can create
-aliasing problems which reduce compilers' ability to perform data dependence
-analysis. Hence it can drastically limit the potential for optimizations,
-including vectorization. Moreover, complex expressions used as array subscripts
-further complicate the data dependence analysis. In general, vectorization also
-requires stride-1 accesses to memory in order to be efficient. As another
-important point, we mention that vectorization is built on top of other loop
-transformations. Sometimes the compiler does not reorder the loops and this does
-not allow for the innermost loop to be vectorized.
+aliasing problems in this sense. Moreover, complex expressions used as array
+subscripts further complicate the data dependence analysis. In general,
+vectorization also requires stride-1 accesses to memory in order to be
+efficient. As another important point, we mention that vectorization is built on
+top of other loop transformations. Sometimes the compiler does not reorder the
+loops and this does not allow for the innermost loop to be vectorized.
 
 We do not provide here a detailed description of vectorization. Instead, we
 simply want to emphasize that it is an important optimization nowadays. Similar
