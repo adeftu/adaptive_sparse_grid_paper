@@ -7,7 +7,7 @@ managing the data coming from functions with high number of dimensions has an
 exponential complexity on the number of dimensions. Therefore, we compress the
 data using the sparse grid technique in order to reduce its size and we
 decompress it afterwards for real-time visualization. For this purpose we use
-the \textit{fastsg} library presented in \cite{murarasu12fastsg:}.
+the \textit{fastsg} library~\cite{murarasu12fastsg:}.
 
 The main idea behind sparse grids is that we can approximate a $D$-dimensional
 function $f : \Omega \rightarrow \mathbb{R}$, where $\Omega = [0, 1]^{D}$, by
@@ -40,8 +40,36 @@ coefficients. This technique also enables us to interpolate at points for which
 we do not have values from simulation. Hence, it can provide hints on the
 simulation outside the initial data. In our case, decompression is a form of
 interpolation based on the sparse grid technique described in
-\cite{CambridgeJournals:227245}. To allow a fluent interaction with data,
-interpolation has to run as fast as possible.
+\cite{CambridgeJournals:227245}.
+
+\subsection{Compression}
+
+It is important that sparse grids should not be confused with sparse matrices.
+They differ in both functionality and computational behavior. As mentioned,
+sparse grids allow us to approximate multi-dimensional functions. The method is
+somehow related to wavelet transformation technique \cite{Mallat89atheory},
+where the computing and grouping the coefficients leads to different levels of
+compression and thus an incremental representation. Similar to wavelet
+compression, we also have here a hierarchical representation which corresponds
+to different levels of detail. The contribution of the coefficients reduces as
+this compression level increases.
+
+Fig.~\ref{fig:truncated_sparse_grid_deco_1} shows how a sparse grid can be
+represented as a sequence of regular grids, grouped by their norm into several
+refinement levels, which we'll call them \textit{groups} from now on. The grids
+in one \textit{group} will be referred as \textit{blocks}. Instead of using the
+traditional approach of storing the grids in trees and hash-tables, we are using
+bijection based data structure with minimum memory footprint
+\cite{Murarasu:2011:CDS:1941553.1941559}, which maps all $(\bar{l},\bar{i})$
+pairs to consecutive integer indices. Thus, all hierarchical coefficients of the
+grid will be stored efficiently in a 1-dimensional array.
+
+Compression the multi-dimensional function means computing the hierarchical
+coefficients, in a traditionally recursive manner by collecting the
+contributions of all points and evaluating the basis functions in each
+dimension. Using the data structure and bijection mentioned above, we can use an
+iterative memory-bound algorithm for compression which is also suitable for
+GPUs.
 
 \begin{figure}[t]
   \begin{subfigure}[b]{1\linewidth}
@@ -62,35 +90,6 @@ interpolation has to run as fast as possible.
   \label{fig:truncated_sparse_grid_deco}
 \end{figure}
 
-\subsection{Compression}
-
-It is important that sparse grids should not be confused with sparse matrices.
-They differ in both functionality and computational behavior. As mentioned,
-sparse grids allow us to approximate multi-dimensional functions. The method is
-somehow related to wavelet transformation technique \cite{Mallat89atheory},
-where the computing and grouping the coefficients leads to different levels of
-compression and thus an incremental representation. Similar to wavelet
-compression, we also have here a hierarchical representation which corresponds
-to different levels of detail. The contribution of the coefficients reduces as
-this compression level increases.
-
-Compression the multi-dimensional function means computing the hierarchical
-coefficients, in a traditionally recursive manner by collecting the
-contributions of all points and evaluating the basis functions in each
-dimension. Using the data structure and bijection mentioned above, we can use an
-iterative memory-bound algorithm for compression which is also suitable for
-GPUs.
-
-Fig.~\ref{fig:truncated_sparse_grid_deco_1} shows how a sparse grid can be
-represented as a sequence of regular grids, grouped by their norm into several
-refinement levels, which we'll call them \textit{groups} from now on. The grids
-in one \textit{group} will be referred as \textit{blocks}. Instead of using the
-traditional approach of storing the grids in trees and hash-tables, we are using
-bijection based data structure with minimum memory footprint
-\cite{Murarasu:2011:CDS:1941553.1941559}, which maps all $(\bar{l},\bar{i})$
-pairs to consecutive integer indices. Thus, all hierarchical coefficients of the
-grid will be stored efficiently in a 1-dimensional array.
-
 \subsection{Decompression}
 
 Interpolating at a given $D$-dimensional point means traversing the set of
@@ -103,7 +102,7 @@ influence to some extent the performance behavior of interpolation, especially
 on the GPU.
 
 Sparse grid interpolation has 5 input parameters: the number of dimensions
-($D$), the refinement level ($L$), the number of interpolations ($N$), the
+($D$), the refinement level ($L$), the number of interpolation points ($N$), the
 precision ($P$) (single or double precision), and the truncation ($T$)
 (dimensionally truncated or regular). In this paper we concentrate on the first
 3, these being the most important as they can take a wide range of values.
