@@ -34,7 +34,7 @@ that the current one depends on) of a point in dimension $t$, while
 the 1d representation of the sparse grid, \textit{asg1d}. The statements in
 lines 12-13 exhibit a non-sequential memory access pattern.
 
-\begin{algorithm}[b]
+\begin{algorithm}[t]
 \small{
 	\caption{Compression on GPU}
  	\label{alg:hierarchization}                       
@@ -122,7 +122,7 @@ we evaluate the basis function in that point. Line 17 updates the current value
 of the coefficient exploiting the \textit{block}-level structure and exhibiting
 a non-sequential memory access patern.
 
-\begin{algorithm}[t]
+\begin{algorithm}[b]
 \small{
 	\caption{Decompression on GPU}
 	\label{alg:evaluation}

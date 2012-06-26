@@ -85,8 +85,7 @@ GPUs.
     \caption{Dimensionally truncated sparse grid.}
     \label{fig:truncated_sparse_grid_deco_2}
   \end{subfigure}
-  \caption{Decomposition of regular and dimensionally truncated 2D sparse
-  grids.}
+  \caption{Decomposition of 2D sparse grids.}
   \label{fig:truncated_sparse_grid_deco}
 \end{figure}
 
@@ -101,7 +100,7 @@ look at the influence of the inputs on performance. All of these parameters
 influence to some extent the performance behavior of interpolation, especially
 on the GPU.
 
-Sparse grid interpolation has 5 input parameters: the number of dimensions
+Sparse grid decompression has 5 input parameters: the number of dimensions
 ($D$), the refinement level ($L$), the number of interpolation points ($N$), the
 precision ($P$) (single or double precision), and the truncation ($T$)
 (dimensionally truncated or regular). In this paper we concentrate on the first
@@ -130,14 +129,14 @@ having the width twice the size of their height. Going back to our sparse grids
 domain, we can thus use a refinement level in one dimension (width) equal to 2x
 the refinement level in the other dimension (height).
 
-Our versions of interpolation are based on the iterative algorithm from
+Our versions of decompression are based on the iterative algorithm from
 \cite{Murarasu:2011:CDS:1941553.1941559} over which we applied a series of
-optimizations for both CPUs and GPUs. Having these two versions of
-interpolation, we combine them so that all the processors in a heterogeneous
-system simultaneously work on interpolation. In general, on the systems where we
-measured the performance of interpolation, the GPU was faster than the CPU. But,
-since our goal is performance portability, it makes sense to consider the
-situation in which the GPU is not faster than the multi-core CPUs available in
-the system. This can be the case for instance with Intel's Sandy Bridge
-processors which have a SIMD unit~\cite{avx} (256~bit AVX) twice as wide as the
-previous generation, Nehalem (128~bit SSE).
+optimizations for both CPUs and GPUs. Having these two versions, we combine
+them so that all the processors in a heterogeneous system simultaneously work on
+decompression. In general, on the systems where we measured the performance of
+decompression, the GPU was faster than the CPU. But, since our goal is
+performance portability, it makes sense to consider the situation in which the
+GPU is not faster than the multi-core CPUs available in the system. This can be
+the case for instance with Intel's Sandy Bridge processors which have a SIMD
+unit~\cite{avx} (256~bit AVX) twice as wide as the previous generation, Nehalem
+(128~bit SSE).
