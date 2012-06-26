@@ -12,6 +12,28 @@ operations with integers, synthesized in Table \ref{table:optimizations}.
 
 \subsection{Compression}
 
+We start with a basic version of \textit{hierarchization} algorithm for GPU
+where we loop with $t$ variable over all dimensions, with $g$ variable over all
+\textit{groups} and then we call the kernel procedure. Each warp on the GPU
+computes the coefficients for one \textit{block} of the sparse grid in order to
+achieve a better cache locality and to reduce the thread divergence within
+warps. Because the coefficients for one \textit{block} are stored contiguously
+in memory, we also want for these values to be accessed simultaneously.
+Therefore, in loop $j$, each thread within a warp starts reading at index equal
+to its lane and then subsequently every element found at a distance multiple of 32 (the
+number of threads within a warp). In this way, a warp will access the memory
+contiguously at each read instruction with an increased throughput. In lines
+8-9 we use the bijection to move from the global index of the grid point to
+$(\bar{l}, \bar{i})$, the \textit{levels} and respectively \textit{index}
+vectors representing the coordinates of one point in the grid. We store them in the
+shared memory because they are frequently used. The bijection functions use many
+integer-only operations. The routines \textit{left} and \textit{right}
+from lines 10-11 return the left and respectively right parents (\textit{blocks}
+that the current one depends on) of a point in dimension $t$, while
+\textit{agp2idx} returns the index where point $(\bar{l}, \bar{i})$ is stored in
+the 1d representation of the sparse grid, \textit{asg1d}. The statements in
+lines 12-13 exhibit a non-sequential memory access pattern.
+
 \begin{algorithm}[b]
 \small{
 	\caption{Compression on GPU}
@@ -45,28 +67,6 @@ operations with integers, synthesized in Table \ref{table:optimizations}.
 	\end{algorithmic}
 }
 \end{algorithm}
-
-We start with a basic version of \textit{hierarchization} algorithm for GPU
-where we loop with $t$ variable over all dimensions, with $g$ variable over all
-\textit{groups} and then we call the kernel procedure. Each warp on the GPU
-computes the coefficients for one \textit{block} of the sparse grid in order to
-achieve a better cache locality and to reduce the thread divergence within
-warps. Because the coefficients for one \textit{block} are stored contiguously
-in memory, we also want for these values to be accessed simultaneously.
-Therefore, in loop $j$, each thread within a warp starts reading at index equal
-to its lane and then subsequently every element found at a distance multiple of 32 (the
-number of threads within a warp). In this way, a warp will access the memory
-contiguously at each read instruction with an increased throughput. In lines
-8-9 we use the bijection to move from the global index of the grid point to
-$(\bar{l}, \bar{i})$, the \textit{levels} and respectively \textit{index}
-vectors representing the coordinates of one point in the grid. We store them in the
-shared memory because they are frequently used. The bijection functions use many
-integer-only operations. The routines \textit{left} and \textit{right}
-from lines 10-11 return the left and respectively right parents (\textit{blocks}
-that the current one depends on) of a point in dimension $t$, while
-\textit{agp2idx} returns the index where point $(\bar{l}, \bar{i})$ is stored in
-the 1d representation of the sparse grid, \textit{asg1d}. The statements in
-lines 12-13 exhibit a non-sequential memory access pattern.
 
 We now improve this basic algorithm with the goal of exploiting our data
 structure and \textit{block}-level decomposition. We start with optimizations
