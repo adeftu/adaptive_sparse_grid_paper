@@ -82,14 +82,14 @@ for GPU random points, uniformly distributed in the function domain. Here we
 make two empirical observations. First, the GFlops rate for CPU remains constant
 when increasing the number of interpolation points. Second, we used 8 chunk
 sizes (number of interpolation points) for each warp: 32, 64, 96, 128, 160, 192,
-224, and 256, but chose only the most performant in each case. A pattern could
-not be observed, results varying from configuration to configuration and also
-between various optimizations.
+224, and 256, but chose only the optimal one for each optimization. A pattern on
+how the chunk size affects the performance could not be observed, which
+motivates for a careful tunning of the algorithm before running.
 
 The results of our tests are presented in Fig.~\ref{fig:eval_results}. Compared
 to the CPU versions, the optimizations for GPU are not that effective. The main
 reason for this is that giving the high memory requirement for storing the
-interpolation points, we used the GPU main memory. Although caching is
+interpolation points, we used the GPU's global memory. Although caching is
 performed, we believe that a higher throughput could be obtained if we could
 have stored the results in shared memory. The optimization which brings a clear
 speedup is \textit{sred1} showing that division instructions are still very
