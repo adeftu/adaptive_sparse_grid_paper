@@ -2,17 +2,39 @@
 \label{sec:op_strategies}
 
 The computational core of \textit{fastsg} resides in \textit{hierarchize} and
-\textit{evaluate} routines. We will not enter here into the details of these
-procedures. A summary of them is available in
-\cite{Murarasu:2011:CDS:1941553.1941559}.
-Instead, we extend the set of loop transformations from \cite{murarasu12fastsg:} and
-present them in the context of CPUs and GPUs. We group these optimizations into
-3 categories based on their end purpose: memory locality, vectorization, and
-operations with integers, synthesized in Table \ref{table:optimizations}.
+\textit{evaluate} routines which do the compression and decompression
+respectively. A full description of them is available in
+\cite{Murarasu:2011:CDS:1941553.1941559}. We extend the set of loop
+transformations from \cite{murarasu12fastsg:} and present them in the context of
+CPUs and GPUs. We group these optimizations into 3 categories based on their end
+purpose: memory locality, vectorization, and operations with integers,
+synthesized in Table \ref{table:optimizations}.
 
 \subsection{Compression}
 
-\begin{algorithm}[b]
+We start with a basic version of \textit{hierarchization} algorithm for GPU
+where we loop with $t$ variable over all dimensions, with $g$ variable over all
+\textit{groups} and then we call the kernel procedure. Each warp on the GPU
+computes the coefficients for one \textit{block} of the sparse grid in order to
+achieve a better cache locality and to reduce the thread divergence within
+warps. Because the coefficients for one \textit{block} are stored contiguously
+in memory, we also want for these values to be accessed simultaneously.
+Therefore, in loop $j$, each thread within a warp starts reading at index equal
+to its lane and then subsequently every element found at a distance multiple of 32 (the
+number of threads within a warp). In this way, a warp will access the memory
+contiguously at each read instruction with an increased throughput. In lines
+8-9 we use the bijection to move from the global index of the grid point to
+$(\bar{l}, \bar{i})$, the \textit{levels} and respectively \textit{index}
+vectors representing the coordinates of one point in the grid. We store them in the
+shared memory because they are frequently used. The bijection functions use many
+integer-only operations. The routines \textit{left} and \textit{right}
+from lines 10-11 return the left and respectively right parents (\textit{blocks}
+that the current one depends on) of a point in dimension $t$, while
+\textit{agp2idx} returns the index where point $(\bar{l}, \bar{i})$ is stored in
+the 1d representation of the sparse grid, \textit{asg1d}. The statements in
+lines 12-13 exhibit a non-sequential memory access pattern.
+
+\begin{algorithm}[t]
 \small{
 	\caption{Compression on GPU}
  	\label{alg:hierarchization}                       
@@ -46,28 +68,6 @@ operations with integers, synthesized in Table \ref{table:optimizations}.
 }
 \end{algorithm}
 
-We start with a basic version of \textit{hierarchization} algorithm for GPU
-where we loop with $t$ variable over all dimensions, with $g$ variable over all
-\textit{groups} and then we call the kernel procedure. Each warp on the GPU
-computes the coefficients for one \textit{block} of the sparse grid in order to
-achieve a better cache locality and to reduce the thread divergence within
-warps. Because the coefficients for one \textit{block} are stored contiguously
-in memory, we also want for these values to be accessed simultaneously.
-Therefore, in loop $j$, each thread within a warp starts reading at index equal
-to its lane and then subsequently every element found at a distance multiple of 32 (the
-number of threads within a warp). In this way, a warp will access the memory
-contiguously at each read instruction with an increased throughput. In lines
-8-9 we use the bijection to move from the global index of the grid point to
-$(\bar{l}, \bar{i})$, the \textit{levels} and respectively \textit{index}
-vectors representing the coordinates of one point in the grid. We store them in the
-shared memory because they are frequently used. The bijection functions use many
-integer-only operations. The routines \textit{left} and \textit{right}
-from lines 10-11 return the left and respectively right parents (\textit{blocks}
-that the current one depends on) of a point in dimension $t$, while
-\textit{agp2idx} returns the index where point $(\bar{l}, \bar{i})$ is stored in
-the 1d representation of the sparse grid, \textit{asg1d}. The statements in
-lines 12-13 exhibit a non-sequential memory access patern.
-
 We now improve this basic algorithm with the goal of exploiting our data
 structure and \textit{block}-level decomposition. We start with optimizations
 for integer operations. The first observation we make is that computing the
@@ -89,15 +89,17 @@ converting $\bar{i}$ to the corresponding index.
 $(\bar{lr}, \bar{ir})$, the \textit{levels} and \textit{index} vectors of the
 left and right parents, differ from $\bar{l}$ and $\bar{i}$ of the current point
 only in one dimension. Therefore, the conversion mentioned above is not
-necessary anymore, thus reducing the complexity from $O(D)$ to $O(1)$.
+necessary anymore, thus reducing the complexity from $\mathcal{O}(D)$ to
+$\mathcal{O}(1)$.
 
 Now, in the innermost loop over the current \textit{block}, what is left to
 compute is the conversion $(\bar{l}(t), \bar{i}(t)) \rightarrow (\bar{ll}(t),
 \bar{il}(t))$ and $(\bar{l}(t), \bar{i}(t)) \rightarrow (\bar{lr}(t),
-\bar{ir}(t))$ which has a complexity of $O(\bar{l}(t))$.
+\bar{ir}(t))$ which has a complexity of $\mathcal{O}(\bar{l}(t))$.
 \textit{inv4} precomputes the results of these conversions before the kernel
 launch and stores them in an array. The advantage is that the complexity of the
-innermost loop is now $O(1)$, but at a cost of higher memory footprint.
+innermost loop is now $\mathcal{O}(1)$, but at a cost of higher memory
+footprint.
 
 Lastly, in order to improve memory locality and the data access patterns,
 \textit{ichg1} optimization does a loop interchange by moving the loop over the
@@ -118,9 +120,9 @@ and $b$ loops traverse \textit{groups} and \textit{blocks} respectively.
 \textit{block}. In line 13 we compute the coefficient position, while in line 16
 we evaluate the basis function in that point. Line 17 updates the current value
 of the coefficient exploiting the \textit{block}-level structure and exhibiting
-a non-sequential memory access patern.
+a non-sequential memory access pattern.
 
-\begin{algorithm}[t]
+\begin{algorithm}[b]
 \small{
 	\caption{Decompression on GPU}
 	\label{alg:evaluation}
