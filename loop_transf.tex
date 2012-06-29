@@ -35,8 +35,10 @@ misses. Sometimes, because the number of iterations of a loop is not known at
 compile time, the compiler cannot determine the best permutation of loops.
 Complex data dependencies resulting from complex array subscripts can also limit
 the applicability of this optimization since the compiler needs to prove that a
-given optimization preserves the semantics of the unoptimized code. This is
-actually a general rule followed by all compiler transformations. A study about
+given optimization preserves the semantics of the unoptimized code. 
+% This is
+%actually a general rule followed by all compiler transformations. 
+A study about
 automatic loop interchange on GPUs is presented in
 \cite{Leung:2009:APG:1596655.1596670}.
 

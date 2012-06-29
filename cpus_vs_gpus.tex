@@ -6,7 +6,7 @@ latest developments show a trend towards an unification in terms of hardware
 features of both architectures. Instead of focusing only on the classic way to
 increase the speed of CPUs by raising the frequency with each new release, the
 manufacturers are now trying to exploit other directions as well, such as
-vectorization or multi-cores. An eloquent example is Intel's Many Integrated
+vectorization or many-cores. An eloquent example is Intel's Many Integrated
 Core Architecture (MIC) \cite{intel_mic} which is announced to include 512-bit
 wide vector registers and more than 50 cores per chip (in Knights Corner product
 line). On the other hand, GPUs manufacturers started to include CPU-like
@@ -16,7 +16,7 @@ tend to have a cache hierarchy similar to the one on CPUs.
 
 Nonetheless, when performance becomes a priority, programming the GPUs requires
 being aware of some architectural features that are different. We will describe
-in the following subsections the current GPU architectures using CUDA terms and
+in the following subsections the current GPU architectures using CUDA terminology and
 provide some brief guidelines for programming Nvidia cards.
 
 \subsection{GPU Architecture}
@@ -40,7 +40,8 @@ all these 32 threads execute the same instruction and very low when thread
 divergence caused by branching occurs. This is an important factor to consider
 when writing code for GPUs with performance in mind.
 
-Each thread has a small local private memory and each \textit{block} has a
+Each thread has a small local private memory. Threads are grouped in \textit{blocks}. 
+Each \textit{block} has a
 shared memory accessible by all threads in the \textit{block}. Specifically
 designed for graphics processing, the cards are also equipped with read-only,
 fast, on-chip memories like constant and texture caches which are used for
@@ -62,7 +63,7 @@ framework, called CUDA. CUDA allows the programmer to define functions
 (\textit{kernels}) to be executed in parallel by many threads on different
 processors. When the \textit{kernels} are launched on the GPU, a given topology
 must be specified. Threads are grouped in \textit{thread blocks} which are laid
-in a grid. Each \textit{thread block} has an unique 2d index which gives its
+in a grid. Each \textit{thread block} has a unique 2d index which gives its
 position in the grid, while each thread has a 3d index identifying the thread in
 a \textit{block}. This aspect allows uni-, bi-, and three-dimensional
 topologies, the right configuration being chosen depending on the problem to be

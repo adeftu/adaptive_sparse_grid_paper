@@ -24,8 +24,9 @@ range of architectures, we do not want to lose ourselves in the details of the
 programming models. A high-level simplified view allows us to have more
 flexibility when adapting the code to new architectures. Considering this
 trade-off, our goal is therefore to develop high-level code transformations that
-address common features among different devices. We do not expect that the
-sequence of transformations remains the same. To simplify the porting of
+address common features among different devices. 
+% We do not expect that the sequence of transformations remains the same. 
+To simplify the porting of 
 applications from one architecture to another, it is essential to determine the
 common and different aspects of the architectures and map the optimizations
 accordingly. As an example, CPUs and GPUs have vector units and
@@ -53,6 +54,7 @@ are valid for both CPUs and GPUs, considering the above mentioned view of GPUs
 as vector processors. Moreover, we consider that our study is important giving
 that more and more programming models are emerging and the open question is if
 we can design optimizations which are portable across processor architectures.
+
 The main contributions of our paper are as follows:
 
 \begin{itemize}
@@ -63,7 +65,9 @@ The main contributions of our paper are as follows:
   the challenges met along the way and their solutions.
   \item We report speedup results that, for the considered computational
   steering application, accelerate the state-of-the-art implementation up to a
-  factor of 6.2x for compression and 1.5x for decompression.
+  factor of 6.2x for compression and 1.5x for decompression on GPU. 
+  % On CPU, our compression and decompression routines are 2x faster than the 
+  already published implementation.
 \end{itemize}
 
 The rest of the paper is structured as follows. In
