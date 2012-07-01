@@ -32,7 +32,8 @@ $h$ is the standard hat function $h(x) = max(1 - |x|, 0)$:
 
 The truncated sparse grid, $\Omega_a \subseteq \Omega_r$, identified by a given constraint vector $\underline{c}$, is the set of points
 \begin{equation*}
-\Omega_a := \{\underline{x}_{\underline{l}, \underline{i}} : |\underline{l}|_1 \leq L + D - 1, l_t \leq c_t,  t \in \{1, \dots, D\}\}.
+\Omega_a := \{\bar{x}_{\bar{l}, \bar{i}} : |\bar{l}|_1 \leq L
++ D - 1, l_t \leq c_t,  t \in \{1, \dots, D\}\}.
 \end{equation*}
 If $c_t = L, \forall 1 \leq t \leq D$ then $\Omega_a$ becomes a regular sparse grid, i.e. regular sparse grids are special types of dimensionally truncated sparse grids.
 
