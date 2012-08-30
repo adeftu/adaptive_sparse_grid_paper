@@ -10,76 +10,76 @@ CPUs). The cores operate at a lower frequency (often 1 GHz against 2 - 3 GHz for
 CPUs) and are in-order, hiding the latency of the instruction pipeline by
 interleaving on each core the execution of thousands of threads.
 
-A simple abstraction for GPUs is to consider them many-core architectures, with
+An abstraction of GPUs is to see them as many-core architectures, with
 a large number of cores and with each core including large vector units
-allowing to compute up to 32 single precision flops per cycle (64 flops for
-FMAD). Compute Unified Device Architecture (CUDA) is an option for programming
-Nvidia GPUs. The vector units are not directly visible in CUDA. The SIMD nature
-of GPUs reveals itself when applying various optimizations, e.g. for bank
-conflicts and memory access coalescing \cite{cuda}. This view of GPUs as vector
-processors is at the foundation of \cite{Volkov:2008:BGT:1413370.1413402}.
+allowing to compute up to 32 single precision floating point operations per cycle 
+(64 flops if we count FMAD as 2 operations, i.e. a multiply and an addition). 
+Nvidia GPUs can be programmed through the well known CUDA framework. Although the vector units are not directly 
+visible in CUDA, the SIMD nature of GPUs reveals itself when applying various optimizations, 
+e.g. for bank conflicts and memory access coalescing \cite{cuda}. Viewing GPUs as vector processors
+is supported by a very efficient implementation of dense linear algebra operations on GPUs described in 
+\cite{Volkov:2008:BGT:1413370.1413402}.
 
 When reasoning about code transformations that improve performance on a wide
 range of architectures, we do not want to lose ourselves in the details of the
-programming models. A high-level simplified view allows us to have more
-flexibility when adapting the code to new architectures. Considering this
-trade-off, our goal is therefore to develop high-level code transformations that
-address common features among different devices. 
+programming models since this often results in lower programming productivity. 
+A more abstract view of the hardware focusing on hardware characteristics 
+rather than programming models allows for more flexibility when adapting a
+code to a new architecture. For improved productivity and performance, our goal 
+is to develop high-level code transformations that address characteristics common 
+across different processors, namely CPUs and GPUs.
 % We do not expect that the sequence of transformations remains the same. 
-To simplify the porting of 
-applications from one architecture to another, it is essential to determine the
-common and different aspects of the architectures and map the optimizations
-accordingly. As an example, CPUs and GPUs have vector units and
-array-of-structures to structure-of-arrays is a transformation that often is
-required by both. Given the convergence of CPUs and GPUs seen in CPUs that have
-doubled the width of the SIMD units and GPUs that received 2 level coherent
-caches \cite{fermi}, we expect that more transformations, e.g. for locality, to
-be shared between codes for CPUs and GPUs.
+In order to simplify the porting of an application to a new architecture, 
+it is important to determine the similarities and differences between the old and the new architecture and 
+map the optimizations accordingly. In defense of this statement, CPUs and GPUs both have vector units and
+array-of-structures to structure-of-arrays (AOS to SOA) is a transformation that often is
+required by both. Given the current convergence trend seen in CPUs and GPUs, i.e. CPUs have
+doubled the width of the SIMD units from SSE to AVX and GPUs have been equiped with a 2 level cache memory \cite{fermi}, 
+we expect that increasingly more transformations, e.g. for locality, to be shared between codes for CPUs and GPUs.
 
-To test these concepts, we consider a computational steering application, the
-main goal of which is to allow for a smooth, real-time interaction with
-compressed simulation data. We have two phases (or algorithms) being at the core
-of the compression and decompression of the simulation data. These algorithms
-are in fact based on a numerical method called the sparse grid technique which
-allows for a hierarchical and efficient representation of high-dimensional
-functions, similar to wavelet series. Using it, it was shown that sheer amounts
-of simulation data can be managed efficiently \cite{Butnaru201156}.
+In order to support our ideas, we consider a computational steering application whose
+main goal is to provide real-time interaction with compressed simulation data \cite{Butnaru201156}. 
+The two hotspots of this application are the routines implementing two advanced algorithms
+for data compression and decompression. Data compression is in this case achieved through a
+a numerical method called the \textit{sparse grid technique} which is similar to wavelets to some extent. 
+More exactly, sparse grids allow for a hierarchical and memory efficient representation 
+of high-dimensional simulation data. Note that sparse grids must not be confused with sparse matrices
+mainly because of the high-dimensional settings in which sparse grids are used, e.g. 10-dimensional, as opposed
+to matrices which are 2-dimensional.
 
-For enhanced performance, it was important to benefit from the latest
-developments in hardware. But starting from scratch with every hardware release
-is far from being a productive approach. Instead, what we followed was to
-develop optimizations for loops and data layout at the same level at which we
-develop algorithms. We realized that many of the transformations we are applying
-are valid for both CPUs and GPUs, considering the above mentioned view of GPUs
-as vector processors. Moreover, we consider that our study is important giving
-that more and more programming models are emerging and the open question is if
-we can design optimizations which are portable across processor architectures.
+In order to reduce the response time of our computational steering application, it is important to leverage the latest
+hardware. However, restarting the optimization process with every major hardware release can be very counter-productive
+and therefore should be avoided. Instead, what we follow is to develop optimizations for loops and data layout at the 
+same abstraction level at which we develop algorithms. The main conclusion supported by this paper is that most of the 
+transformations proposed for our test application are applicable and beneficial to both CPUs and GPUs. Our optimization
+approach is relies highly on an analysis of CPUs and GPUs based on similarities and differences, putting minimal emphasis
+on the programming model which in our view can actually complicate the porting process. Moreover, we believe that our study 
+is important given the fact that increasingly more programming models are emerging and the open question is whether or not 
+programmers can design optimizations portable across different types of processors, e.g. CPUs and GPUs.
 
 The main contributions of our paper are as follows:
 
 \begin{itemize}
-  \item We port dimensionally truncated sparse grids algorithms on GPUs and
-  report a speedup of 28.3x compared to the CPU versions.
-  \item We present a study on the performance of a subset of common loop
-  transformations for two different architectures, CPUs and GPUs. We describe
-  the challenges met along the way and their solutions.
-  \item We report speedup results that, for the considered computational
-  steering application, accelerate the state-of-the-art implementation up to a
-  factor of 6.2x for compression and 1.5x for decompression on GPU. 
+  \item We port for the first time the sparse grid library \textit{fastsg} on GPUs and
+  report a speedup of 28.3x compared to the optimized CPU version.
+  \item We study the performance benefits of a set of loop transformations on CPUs and GPUs. 
+  We describe the challenges met along the way and their solutions.
+  \item We report speedup numbers in the context of our computational steering application
+  accelerate the state-of-the-art implementation up to a factor of 6.2x for compression
+  and 1.5x for decompression on GPUs.
 \end{itemize}
 
 The rest of the paper is structured as follows. In
-Section~\ref{sec:related_work} we place our work in the field of application
-optimizations and sparse grids and relate to previous published papers.
-Section~\ref{sec:cpus_vs_gpus} highlights the similarity between CPUs and GPUs,
-seen as modern processors which borrow architectural features from each other,
-allowing for common optimizations to be used.
-In Section~\ref{sec:optimizations} we describe a set of loop transformation
-suitable for both architectures in this context. Section~\ref{sec:comp_steering}
-introduces in the field of sparse grids and presents the core functionality of
-our library. Section~\ref{sec:op_strategies} shows how we can apply
-optimizations for both CPUs and GPUs based on the aforementioned ideas. In
+Section~\ref{sec:related_work} we place our work in the field code 
+optimizations and sparse grids, and relate to the published work.
+Section~\ref{sec:cpus_vs_gpus} highlights the similarities between CPUs and GPUs,
+allowing for a reuse of optimizations across architectures.
+In Section~\ref{sec:optimizations} we describe a set of loop transformations
+suitable for both architectures. Section~\ref{sec:comp_steering}
+introduces sparse grids and describes the core functionality of
+the sparse grid library \textit{fastsg}. Section~\ref{sec:op_strategies} shows our
+optimizations for CPUs and GPUs based on the aforementioned ideas. In
 Section~\ref{sec:evaluation} we present our results and show that despite using
-different architectures, similarities in hardware characteristics can make
-optimizing code easier. Finally, Section~\ref{sec:conclusion} concludes our
-work.
+different architectures, similarities in terms of hardware characteristics have the potential to
+easen code porting. Finally, Section~\ref{sec:conclusion} concludes the
+paper.
