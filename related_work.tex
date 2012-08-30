@@ -1,29 +1,30 @@
 \section{Related Work}
 \label{sec:related_work}
-Sparse grids are known in mathematics for their ability to tackle
+Sparse grids are a special type of grids known for their ability to address
 high-dimensional problems which suffer from the so-called ``curse of
 dimensionality'', i.e. the exponential dependency of the number of grid points
-on the number of dimensions. The sparse grid theory and applications are shown
-in \cite{CambridgeJournals:227245}.
+on the number of dimensions. Sparse grid applications include solving PDEs, data mining
+and recently computational steering. For the detailed theory and applicability the 
+reader is referred to \cite{CambridgeJournals:227245}.
 
-A compact data structure with minimal memory consumption and efficient
-algorithms for regular sparse grids have recently been presented in
-\cite{Murarasu:2011:CDS:1941553.1941559}. Further support for dimensionally
-truncated sparse grids on CPUs was added in \cite{murarasu12fastsg:}, giving the
-flexibility to treat dimensions differently, by allowing more or less
-discretization points per dimensions, and thus to control the refinement level
-on a per dimension basis. In our paper, our starting point is given by these
-algorithms for dimensionally truncated sparse grids. We propose transformations
-that allows us to port them efficiently on GPUs. In addition, we present a set
-of loop transformations for increasing the performance on both CPUs and GPUs.
+A data structure with minimal memory consumption and efficient
+algorithms for sparse grids are described in 
+\cite{Murarasu:2011:CDS:1941553.1941559}. Further functionality, i.e. for dimensionally
+truncated sparse grids, and an efficient implementation on CPUs is covered by \cite{murarasu12fastsg:}.
+Dimensionally truncated sparse grids give the flexibility to treat dimensions differently, 
+by allowing more or less discretization points per dimension, and thus to control the refinement level of the grid
+on a per dimension basis. Compared to previous work, we propose loop transformations that allows us to 
+efficiently port dimensionally truncated sparse grids on GPUs. To the best of the authors' knowledge this is the first
+GPU implementation of dimensionally truncated sparse grids. Moreover, emphasis is put on exposing a set 
+of loop transformations that increase the performance on both CPUs and GPUs.
 
-Our work is built on the foundation of optimization techniques for heterogeneous systems
-applied in the context of different applications. A set of techniques for
-efficient programming of hybrid systems in the context of dense linear algebra
-were presented in \cite{Tomov:2010:TDL:1805333.1805388}.
-Here they show how the computation can be split for a better exploitation of
-each device, but do not address the problem of programming CPUs and GPUs using a
-set of common features. Also related to this field of study is the work from
-\cite{Augonnet:2011:SUP:1951453.1951454}, which shows techniques for efficiently
+Our work is inspired by optimization techniques for heterogeneous systems
+applied to several other applications. A set of techniques for
+efficient programming of heterogeneous systems for dense linear algebra
+are presented in \cite{Tomov:2010:TDL:1805333.1805388}. The authors show there how the computation 
+can be divided across different processor types in order to fully use the system, but do not address 
+the problem of programming CPUs and GPUs based on leveraging their similarities.
+% an similarity oriented analysis as in our work. 
+Related to same field is \cite{Augonnet:2011:SUP:1951453.1951454} which shows techniques for efficiently
 exploiting heterogeneous systems through a uniform execution model.
 
