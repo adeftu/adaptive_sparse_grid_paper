@@ -24,7 +24,11 @@ efficient programming of heterogeneous systems for dense linear algebra
 are presented in \cite{Tomov:2010:TDL:1805333.1805388}. The authors show there how the computation 
 can be divided across different processor types in order to fully use the system, but do not address 
 the problem of programming CPUs and GPUs based on leveraging their similarities.
-% an similarity oriented analysis as in our work. 
-Related to same field is \cite{Augonnet:2011:SUP:1951453.1951454} which shows techniques for efficiently
-exploiting heterogeneous systems through a uniform execution model.
+
+MapCG~\cite{mapcg} is a framework which offers source code level portability
+between multicore systems and accelerators based on the MapReduce paradigm.
+Without loss of generality, it targets Nvidia GPUs and, in contrast to OpenCL,
+provides a high-level programming model. However, compared to our approach of
+focusing on code structure and loop transformations to achieve optimal
+performance in a portable manner, the focus here is on the ease of programming.
 
