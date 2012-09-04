@@ -1,4 +1,4 @@
-\section{Loop Transformations}
+\section{Loop Transformations in \textit{fastsg}}
 \label{sec:optimizations}
 
 Most optimizations applied to numerical codes focus on loops since these are the
@@ -8,9 +8,8 @@ performed by the compiler is presented in \cite{Bacon:1994:CTH:197405.197406}.
 We cover in our paper only a subset of those optimizations relevant for our
 discussion and our routines. Specifically, we focus on optimizations that
 improve memory access by exploiting the deep memory hierarchy of modern
-processors, that make use of the instruction parallelism provided by the
-hardware through loop restructuring, and those that decrease the number of
-instructions executed and help vectorization.
+processors, that decrease the number of instructions executed and help
+vectorization, and those that speed up arithmetic operations with integers.
 
 \subsection{Memory Locality}
 
@@ -35,37 +34,9 @@ misses. Sometimes, because the number of iterations of a loop is not known at
 compile time, the compiler cannot determine the best permutation of loops.
 Complex data dependencies resulting from complex array subscripts can also limit
 the applicability of this optimization since the compiler needs to prove that a
-given optimization preserves the semantics of the unoptimized code. 
-% This is
-%actually a general rule followed by all compiler transformations. 
-A study about
-automatic loop interchange on GPUs is presented in
+given optimization preserves the semantics of the unoptimized code. A study
+about automatic loop interchange on GPUs is presented in
 \cite{Leung:2009:APG:1596655.1596670}.
-
-\subsection{Loop Restructuring}
-
-Among the loop restructuring transformations that increase the instruction
-parallelism we find loop unrolling, loop unroll-and-jam, and software
-pipelining. \textit{Loop unrolling} replicates the body of a loop a number of
-times referred to as the unrolling factor. This optimization also reduces the loop
-overhead and can improve the register, cache, and TLB locality. Another
-advantage is that more possibilities for reordering instructions are available,
-thus resulting in a better utilization of the instruction pipeline. The main
-disadvantage comes from increased size of the compiler generated code which puts
-more pressure on the instruction cache. \textit{Loop unroll-and-jam} is similar
-to unroll in the sense that it copies the body of one of the next inner loops some number
-of times equal to the unroll-and-jam factor. The generated inner loops are then
-fused together (or jammed). This transformation can lead to more independent
-instructions in the inner loop. Both loop unrolling and loop unroll-and-jam
-optimizations pave the way for instruction level parallelism, but on GPUs this
-also translates to a higher register usage, which in turn leads to a reduced
-microprocessor occupancy. However, these optimizations combined with various
-other techniques proved successful when porting some kernels from linear
-algebra, like matrix multiplication \cite{Volkov:2008:BGT:1413370.1413402} or
-symmetric matrix vector product (SYMV) \cite{Nath:2011:OSD:2063384.2063392}.
-\textit{Software pipelining} implies reordering instructions from different
-iterations of a loop such that independent instructions are executed in
-sequence. This transformation is often used in combination with loop unrolling.
 
 \subsection{Vectorization}
 
@@ -91,12 +62,40 @@ to the optimizations that target caches, human intervention is sometimes
 required to cope with the vectorization inhibitors. We refer the reader to
 \cite{vec_guide} for a complete vectorization guide for Intel processors.
 
-Another important loop transformation is \textit{loop invariant code motion}.
-This is a data-flow based loop transformation that moves outside a loop the computation
-whose result does not modify between iterations. The obvious consequence is that
-the number of instructions executed decreases.
+Among the loop restructuring transformations that help compilers we find loop
+unrolling, loop unroll-and-jam, and software pipelining. \textit{Loop unrolling}
+replicates the body of a loop a number of times referred to as the unrolling
+factor. This optimization also reduces the loop overhead and can improve the
+register, cache, and TLB locality. Another advantage is that more possibilities
+for reordering instructions are available, thus resulting in a better
+utilization of the instruction pipeline. The main disadvantage comes from
+increased size of the compiler generated code which puts more pressure on the
+instruction cache. \textit{Loop unroll-and-jam} is similar to unroll in the
+sense that it copies the body of one of the next inner loops some number of
+times equal to the unroll-and-jam factor. The generated inner loops are then
+fused together (or jammed). This transformation can lead to more independent
+instructions in the inner loop. Both loop unrolling and loop unroll-and-jam
+optimizations pave the way for instruction level parallelism, but on GPUs this
+also translates to a higher register usage, which in turn leads to a reduced
+microprocessor occupancy. However, these optimizations combined with various
+other techniques proved successful when porting some kernels from linear
+algebra, like matrix multiplication \cite{Volkov:2008:BGT:1413370.1413402} or
+symmetric matrix vector product (SYMV) \cite{Nath:2011:OSD:2063384.2063392}.
+\textit{Software pipelining} implies reordering instructions from different
+iterations of a loop such that independent instructions are executed in
+sequence. This transformation is often used in combination with loop unrolling.
+
+\subsection{Integer Operations}
+
+\textit{Strength reduction} involves replacing expensive operations with
+arithmetically equivalent ones, but less expensive. In our particular case,
+instead of using divisions inside the loop body, we precompute the inverses
+outside the loop and do multiplications instead. Another important optimization
+in this category is \textit{loop invariant code motion}. This is a data-flow
+based loop transformation that moves outside a loop the computation whose result
+does not modify between iterations. The obvious consequence is that the number
+of instructions executed decreases.
 
 With this presentation of transformations for modern processors, we move to the
-next part of the paper that describes the strategy taken for optimizing
-\textit{fastsg}'s routines. First, a short introduction in the domain of sparse
-grids is necessary.
+next part of the paper that describes how we applied these concepts specifically
+to our application.

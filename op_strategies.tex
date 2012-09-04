@@ -78,13 +78,13 @@ motion optimization \textit{inv1} moves the computation of $\bar{l}$ outside the
 $j$ loop.
 
 Next, in \textit{inv2} we can compute for each \textit{block} of norm $g$ the
-indices in \textit{asg1d} of all $g-1$ parent \textit{blocks} before the innermost
-loop. We store them in an array (in the heap space in the case of CPU
+indices in \textit{asg1d} of all $g-1$ parent \textit{blocks} before the
+innermost loop. We store them in an array (in the heap space in the case of CPU
 implementation and in the shared memory of a CUDA multiprocessor for the GPU
 version). To get the values for these parent points, we can now use this array
-to index \textit{asg1d} and get the start of the \textit{block}. What we still need is
-the index inside the \textit{block}. This is computed inside the $j$ loop by
-converting $\bar{i}$ to the corresponding index.
+to index \textit{asg1d} and get the start of the \textit{block}. What we still
+need is the index inside the \textit{block}. This is computed inside the $j$
+loop by converting $\bar{i}$ to the corresponding index.
 
 \textit{inv3} starts from the observation that $(\bar{ll}, \bar{il})$ and
 $(\bar{lr}, \bar{ir})$, the \textit{levels} and \textit{index} vectors of the
@@ -109,19 +109,20 @@ only process one \textit{block}, but also all its parents.
 
 \subsection{Decompression}
 
-We move now to the algorithm for \textit{evaluation} (Alg.~\ref{alg:evaluation}). The coordinates of all $N$
-points to be evaluated are stored contiguously in a matrix $x[N][D]$ which is
-processed in chunks by each warp, each warp computing one chunk of size $w$ in
-loop $j$. The memory access pattern for one thread inside of its chunk is the
-same as for \textit{hierarchization} algorithm where each thread computes points
-stored at indices multiple of 32 starting from the corresponding lane. The $g$
-and $b$ loops traverse \textit{groups} and \textit{blocks} respectively.
-\textit{idx23} is used to index the beginning of the current \textit{block} in
-\textit{asg1d}, while \textit{idx1} idexes the current point in this
-\textit{block}. In line 13 we compute the coefficient position, while in line 16
-we evaluate the basis function in that point. Line 17 updates the current value
-of the coefficient exploiting the \textit{block}-level structure and exhibiting
-a non-sequential memory access pattern.
+We move now to the algorithm for \textit{evaluation}
+(Alg.~\ref{alg:evaluation}). The coordinates of all $N$ points to be evaluated
+are stored contiguously in a matrix $x[N][D]$ which is processed in chunks by
+each warp, each warp computing one chunk of size $w$ in loop $j$. The memory
+access pattern for one thread inside of its chunk is the same as for
+\textit{hierarchization} algorithm where each thread computes points stored at
+indices multiple of 32 starting from the corresponding lane. The $g$ and $b$
+loops traverse \textit{groups} and \textit{blocks} respectively. \textit{idx23}
+is used to index the beginning of the current \textit{block} in \textit{asg1d},
+while \textit{idx1} idexes the current point in this \textit{block}. In line 13
+we compute the coefficient position, while in line 16 we evaluate the basis
+function in that point. Line 17 updates the current value of the coefficient
+exploiting the \textit{block}-level structure and exhibiting a non-sequential
+memory access pattern.
 
 \begin{algorithm}[t]
 \small{
@@ -172,7 +173,9 @@ for increasing the throughput through memory coalescing by threads within a
 warp. More specific, \textit{vec1'} transposes the matrix $x$ such that instead
 of storing the the points horizontally, one point per row, it stores them
 vertically in $\tilde{x}[(N/32+1) \cdot D][32]$. Thus, all threads in a warp
-access one row in this new matrix for each iteration over dimensions.
+access one row in this new matrix for each iteration over dimensions. This has a
+direct impact on GPU performance by coalescing the accesses to global memory and
+by avoiding memory bank conflicts.
 
 Regarding memory locality, \textit{ichg2} does a loop interchange by moving the
 loop over interpolation points from line 2 inside the loop over \textit{blocks}
@@ -201,9 +204,9 @@ increases the instruction level parallelism.
   \hline
   \textbf{Category} & \textbf{Abbreviation} & \textbf{Optimizations} \\ 
   \hline
-  Memory locality & \textit{ichg1}, \textit{ichg2} & loop interchange \\ 
+  Memory locality & \textit{ichg1}, \textit{ichg2} & loop interchange, loop tiling \\ 
   \hline
-  Vectorization  & \textit{vec1} & loop unroll-and-jam, loop tiling, software pipelining \\ 
+  Vectorization  & \textit{vec1} & loop unroll-and-jam, software pipelining \\ 
   \hline
   \multirow{2}{*}{Integers} & \textit{inv1}, \textit{inv2}, \textit{inv3}, \textit{inv4} & loop invariant code motion \\
   \cline{2-3}
