@@ -1,10 +1,10 @@
 \section{Conclusion}
 \label{sec:conclusion}
 
-In this paper we presented a series of loop transformations and showed
-how they behave on CPUs and GPUs when applied to a computational steering
-application. We argued that giving the architectural similitude of CPUs and GPUs
-seen both as vector processors with different vector units sizes and roughly
+In this paper we presented a series of loop transformations portable across
+multicore processors and accelerators applied in the context of a computational
+steering application. We argued that giving the architectural similitude of CPUs
+and GPUs seen both as vector processors with different vector units sizes and roughly
 same cache hierarchy, some optimizations, at least conceptually, should be the
 same. With these concepts in mind, we proposed an extensive set of optimizations
 for both CPUs and GPUs that provide a speedup of up to 12.8x and 5.2x
@@ -13,7 +13,7 @@ respectively.
 In addition, we presented the first implementation of \textit{hierarchization} and
 \textit{interpolation} algorithms for dimensionally truncated sparse grids on GPUs
 and proved that our data structure and associated algorithms are easily 
-parallelizable using architecture independent loop transformations.
+parallelizable using these portable loop transformations.
 
 We see the convergence of CPUs and GPUs both in terms of hardware features and
 programming languages. On heterogeneous systems OpenCL \cite{opencl} is slowly
