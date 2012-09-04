@@ -84,17 +84,17 @@ when increasing the number of interpolation points. Second, we used 8 chunk
 sizes (number of interpolation points) for each warp: 32, 64, 96, 128, 160, 192,
 224, and 256, but only chose the best in each case when comparing the
 optimizations. For reference, Fig.~\ref{fig:autotune} shows how increasing this
-workload influences the results for the configuration $(d, n) = (5, 15)$. A
-pattern on how the chunk size affects the performance could not be observed,
-which motivates for a careful tunning of the algorithm before running.
+workload influences the results when applying all optimizations in different
+input configurations. A pattern on how the chunk size affects the performance
+could not be observed, which motivates for a careful tunning of the algorithm
+before running.
 
 \begin{figure}[t]
   \begin{subfigure}[b]{1\linewidth}
     \centering
-    \includegraphics[width=1\linewidth]{autotune} \\
-    \caption{CPU}
+    \includegraphics[width=1\linewidth]{autotune}
   \end{subfigure}
-  \caption{Varying per warp workload for \textit{evaluation}.}
+  \caption{Varying computational workload for \textit{evaluation}.}
   \label{fig:autotune}
 \end{figure}
 
