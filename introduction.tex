@@ -69,13 +69,14 @@ optimizations portable across different types of processors, e.g. CPUs and GPUs.
 The main contributions of our paper are as follows:
 
 \begin{itemize}
-  \item We port for the first time the sparse grid library \textit{fastsg} on GPUs and
-  report a speedup of 28.3x compared to the optimized CPU version.
-  \item We study the performance benefits of a set of loop transformations on CPUs and GPUs. 
-  We describe the challenges met along the way and their solutions.
-  \item We report speedup numbers in the context of our computational steering application
-  accelerate the state-of-the-art implementation up to a factor of 6.2x for compression
-  and 1.5x for decompression on GPUs.
+  \item We port for the first time the sparse grid library \textit{fastsg} on
+  GPUs and report a speedup of 28.3x compared to the optimized CPU version.
+  \item We study the performance benefits of a set of loop transformations on
+  CPUs and GPUs. We describe the challenges met along the way and their
+  solutions.
+  \item We report speedup numbers in the context of our computational steering
+  application accelerate the state-of-the-art implementation up to a factor of
+  6.2x for compression and 1.5x for decompression on GPUs.
 \end{itemize}
 
 The rest of the paper is structured as follows. In
@@ -90,5 +91,5 @@ suitable for both architectures. Section~\ref{sec:op_strategies} shows our
 optimizations for CPUs and GPUs based on the aforementioned ideas. In
 Section~\ref{sec:evaluation} we present our results and show that despite using
 different architectures, similarities in terms of hardware characteristics have
-the potential to easen code porting. Finally, Section~\ref{sec:conclusion}
+the potential to ease code porting. Finally, Section~\ref{sec:conclusion}
 concludes the paper.
