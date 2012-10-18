@@ -1,0 +1,14 @@
+#TeXlipse project settings
+#Thu Oct 18 02:58:01 CEST 2012
+markTmpDer=true
+builderNum=2
+outputDir=bin/
+makeIndSty=
+bibrefDir=
+outputFormat=pdf
+tempDir=tmp
+mainTexFile=ltg.tex
+outputFile=ltg.pdf
+langSpell=
+markDer=true
+srcDir=
