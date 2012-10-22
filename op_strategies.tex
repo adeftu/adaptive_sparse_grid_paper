@@ -109,22 +109,7 @@ only process one \textit{block}, but also all its parents.
 
 \subsection{Decompression}
 
-We move now to the algorithm for \textit{evaluation}
-(Alg.~\ref{alg:evaluation}). The coordinates of all $N$ points to be evaluated
-are stored contiguously in a matrix $x[N][D]$ which is processed in chunks by
-each warp, each warp computing one chunk of size $w$ in loop $j$. The memory
-access pattern for one thread inside of its chunk is the same as for
-\textit{hierarchization} algorithm where each thread computes points stored at
-indices multiple of 32 starting from the corresponding lane. The $g$ and $b$
-loops traverse \textit{groups} and \textit{blocks} respectively. \textit{idx23}
-is used to index the beginning of the current \textit{block} in \textit{asg1d},
-while \textit{idx1} idexes the current point in this \textit{block}. In line 13
-we compute the coefficient position, while in line 16 we evaluate the basis
-function in that point. Line 17 updates the current value of the coefficient
-exploiting the \textit{block}-level structure and exhibiting a non-sequential
-memory access pattern.
-
-\begin{algorithm}[t]
+\begin{algorithm}[b!]
 \small{
 	\caption{Decompression on GPU}
 	\label{alg:evaluation}
@@ -156,6 +141,21 @@ memory access pattern.
  	\end{algorithmic}
 }
 \end{algorithm}
+
+We move now to the algorithm for \textit{evaluation}
+(Alg.~\ref{alg:evaluation}). The coordinates of all $N$ points to be evaluated
+are stored contiguously in a matrix $x[N][D]$ which is processed in chunks by
+each warp, each warp computing one chunk of size $w$ in loop $j$. The memory
+access pattern for one thread inside of its chunk is the same as for
+\textit{hierarchization} algorithm where each thread computes points stored at
+indices multiple of 32 starting from the corresponding lane. The $g$ and $b$
+loops traverse \textit{groups} and \textit{blocks} respectively. \textit{idx23}
+is used to index the beginning of the current \textit{block} in \textit{asg1d},
+while \textit{idx1} idexes the current point in this \textit{block}. In line 13
+we compute the coefficient position, while in line 16 we evaluate the basis
+function in that point. Line 17 updates the current value of the coefficient
+exploiting the \textit{block}-level structure and exhibiting a non-sequential
+memory access pattern.
 
 We start with optimizations for a better vectorization. For the CPU version,
 in \textit{vec1} we use loop unroll-and-jam, loop tiling and we vectorize the
