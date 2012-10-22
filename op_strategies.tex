@@ -171,7 +171,7 @@ instruction the threads within a warp access elements found at $D$ distance.
 described for both \textit{hierarchization} and \textit{evaluation} algorithms
 for increasing the throughput through memory coalescing by threads within a
 warp. More specific, \textit{vec1'} transposes the matrix $x$ such that instead
-of storing the the points horizontally, one point per row, it stores them
+of storing the points horizontally, one point per row, it stores them
 vertically in $\tilde{x}[(N/32+1) \cdot D][32]$. Thus, all threads in a warp
 access one row in this new matrix for each iteration over dimensions. This has a
 direct impact on GPU performance by coalescing the accesses to global memory and

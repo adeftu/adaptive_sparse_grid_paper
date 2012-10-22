@@ -11,7 +11,7 @@ CPUs) and are in-order, hiding the latency of the instruction pipeline by
 interleaving on each core the execution of thousands of threads.
 
 An abstraction of GPUs is to see them as many-core architectures, with a large
-number of cores and with each core including large vector units allowing  o
+number of cores and with each core including large vector units allowing to
 compute up to 32 single precision floating point operations per cycle (64 flops
 if we count FMAD as 2 operations, i.e. a multiply and an addition). Nvidia GPUs
 can be programmed through the well known CUDA framework. Although the vector
@@ -43,7 +43,7 @@ In order to support our ideas, we consider a computational steering application
 whose main goal is to provide real-time interaction with compressed simulation
 data \cite{Butnaru201156}. The two hotspots of this application are the routines
 implementing two advanced algorithms for data compression and decompression.
-Data compression is in this case achieved through a a numerical method called
+Data compression is in this case achieved through a numerical method called
 the \textit{sparse grid technique} which is similar to wavelets to some extent.
 More exactly, sparse grids allow for a hierarchical and memory efficient
 representation of high-dimensional simulation data. Note that sparse grids must
@@ -86,10 +86,10 @@ Section~\ref{sec:cpus_vs_gpus} highlights the similarities between CPUs and
 GPUs, allowing for a reuse of optimizations across architectures.
 Section~\ref{sec:comp_steering} introduces sparse grids and describes the core
 functionality of the sparse grid library \textit{fastsg}. In
-Section~\ref{sec:optimizations} we describe a set of loop transformations
+Section~\ref{sec:optimizations}, we describe a set of loop transformations
 suitable for both architectures. Section~\ref{sec:op_strategies} shows our
 optimizations for CPUs and GPUs based on the aforementioned ideas. In
-Section~\ref{sec:evaluation} we present our results and show that despite using
+Section~\ref{sec:evaluation}, we present our results and show that despite using
 different architectures, similarities in terms of hardware characteristics have
 the potential to ease code porting. Finally, Section~\ref{sec:conclusion}
 concludes the paper.
