@@ -45,17 +45,18 @@ In the recent period, \textit{vectorization} has been gaining increased
 attention from developers. The current generation of processors from Intel,
 Sandy Bridge, contains 8-lane SIMD units (AVX), providing two times more
 throughput than the previous 4-lane SIMD units (SSE). Developers are interested
-to make use of the potential 8-fold speedup. In theory this can be achieved
-through vectorization performed by compilers. However, there are several factors
-that limit compilers' ability to vectorize a loop. As with other optimizations
-performed by compilers, it is important for compilers to get a correct view of
-data dependencies before deciding to vectorize a loop. Using pointers can create
-aliasing problems in this sense. Moreover, complex expressions used as array
-subscripts further complicate the data dependence analysis. In general,
-vectorization also requires stride-1 accesses to memory in order to be
-efficient. As another important point, we mention that vectorization is built on
-top of other loop transformations. Sometimes the compiler does not reorder the
-loops and this does not allow for the innermost loop to be vectorized.
+to make use of the potential 8-fold speedup brought to the sequential code. In
+theory this can be achieved through vectorization performed by compilers.
+However, there are several factors that limit compilers' ability to vectorize a
+loop. As with other optimizations performed by compilers, it is important for
+compilers to get a correct view of data dependencies before deciding to
+vectorize a loop. Using pointers can create aliasing problems in this sense.
+Moreover, complex expressions used as array subscripts further complicate the
+data dependence analysis. In general, vectorization also requires stride-1
+accesses to memory in order to be efficient. As another important point, we
+mention that vectorization is built on top of other loop transformations.
+Sometimes the compiler does not reorder the loops and this does not allow for
+the innermost loop to be vectorized.
 
 We do not provide here a detailed description of vectorization. Instead, we
 simply want to emphasize that it is an important optimization nowadays. Similar
