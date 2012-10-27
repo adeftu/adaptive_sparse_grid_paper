@@ -2,13 +2,33 @@
 \label{sec:op_strategies}
 
 The computational core of \textit{fastsg} resides in \textit{hierarchize} and
-\textit{evaluate} routines which do the compression and decompression
-respectively. A full description of them is available in
+\textit{evaluate} routines which do the compression and decompression,
+respectively. Their full description is available in
 \cite{Murarasu:2011:CDS:1941553.1941559}. We extend the set of loop
 transformations from \cite{murarasu12fastsg:} and present them in the context of
 CPUs and GPUs. As before, we group these optimizations into 3 categories based
 on their end purpose: memory locality, vectorization, and operations with
 integers, synthesized in Table~\ref{table:optimizations}.
+
+\begin{table*}[t]
+\caption{Summary of optimizations.}
+\label{table:optimizations}
+\centering
+\small
+\begin{tabular}{|c|l|l|}
+  \hline
+  \textbf{Category} & \textbf{Abbreviation} & \textbf{Optimizations} \\ 
+  \hline
+  Memory locality & \textit{ichg1}, \textit{ichg2} & loop interchange, loop tiling \\ 
+  \hline
+  Vectorization  & \textit{vec1} & loop unroll-and-jam, software pipelining \\ 
+  \hline
+  \multirow{2}{*}{Integers} & \textit{inv1}, \textit{inv2}, \textit{inv3}, \textit{inv4} & loop invariant code motion \\
+  \cline{2-3}
+  & \textit{sred1} & strength reduction, loop invariant code motion \\
+  \hline
+\end{tabular}
+\end{table*}
 
 \subsection{Compression}
 
@@ -19,21 +39,20 @@ kernel procedure. Each warp on the GPU computes the coefficients for one
 \textit{block} of the sparse grid in order to achieve a better cache locality
 and to reduce the thread divergence within warps. Because the coefficients for
 one \textit{block} are stored contiguously in memory, we also want for these
-values to be accessed simultaneously. Therefore, in loop $j$, each thread within
-a warp starts reading at index equal to its lane and then subsequently every
-element found at a distance multiple of 32 (the number of threads within a
-warp). In this way, a warp will access the memory contiguously at each read
-instruction with an increased throughput. In lines 8-9 we use the bijection to
-move from the global index of the grid point to $(\bar{l}, \bar{i})$, the
-\textit{levels} and respectively \textit{index} vectors representing the
-coordinates of one point in the grid. We store them in the shared memory because
-they are frequently used. The bijection functions use many integer-only
-operations. The routines \textit{left} and \textit{right} from lines 10-11
-return the left and respectively right parents (\textit{blocks} that the current
-one depends on) of a point in dimension $t$, while \textit{agp2idx} returns the
-index where point $(\bar{l}, \bar{i})$ is stored in the 1d representation of the
-sparse grid, \textit{asg1d}. The statements in lines 12-13 exhibit a
-non-sequential memory access pattern.
+values to be accessed simultaneously by a warp. Therefore, in loop $j$, each
+thread within a warp starts reading at index equal to its lane and then
+subsequently every element found at a distance multiple of 32 (the number of
+threads within a warp). In lines 8-9 we use the bijection to move from the
+global index of the grid point to $(\bar{l}, \bar{i})$, the \textit{levels} and
+respectively \textit{index} vectors representing the coordinates of one point in
+the grid. Since they are frequently used, we store them in the shared memory.
+The bijection functions use many integer-only operations. The routines
+\textit{left} and \textit{right} from lines 10-11 return the left and
+respectively right parents (\textit{blocks} that the current one depends on) of
+a point in dimension $t$, while \textit{agp2idx} returns the index where point
+$(\bar{l}, \bar{i})$ is stored in the 1d representation of the sparse grid,
+\textit{asg1d}. The statements in lines 12-13 exhibit a non-sequential memory
+access pattern.
 
 \begin{algorithm}[t]
 \small{
@@ -46,11 +65,7 @@ non-sequential memory access pattern.
  				\State \Call{HierarchizeKernel}{$t, g$}
  			\EndFor
  		\EndFor
- 		\algstore{bkbreak}
-	\end{algorithmic}
- 
-	\begin{algorithmic}[1]
-  		\algrestore{bkbreak}
+
   		\Procedure{HierarchizeKernel}{$t, g$}
 	 		\For{$j \leftarrow \Call{BlockStart}{g} + lane;$ \\
 	 		    \hspace{24pt} $j < \Call{BlockEnd}{g}; \; j\leftarrow j + 32$}
@@ -71,36 +86,28 @@ non-sequential memory access pattern.
 
 We now improve this basic algorithm with the goal of exploiting our data
 structure and \textit{block}-level decomposition. We start with optimizations
-for integer operations. The first observation we make is that computing the
-$\bar{l}$ vector for each point in the \textit{block} is redundant because
-within a \textit{block}, it has the same value. Therefore loop invariant code
-motion optimization \textit{inv1} moves the computation of $\bar{l}$ outside the
-$j$ loop.
+for integer operations. Since within a \textit{block}, $\bar{l}$ vector has the
+same value, optimization \textit{inv1} does a loop invariant code motion and
+shifts the computation of $\bar{l}$ outside the $j$ loop.
 
-Next, in \textit{inv2} we can compute for each \textit{block} of norm $g$ the
-indices in \textit{asg1d} of all $g-1$ parent \textit{blocks} before the
-innermost loop. We store them in an array (in the heap space in the case of CPU
-implementation and in the shared memory of a CUDA multiprocessor for the GPU
-version). To get the values for these parent points, we can now use this array
-to index \textit{asg1d} and get the start of the \textit{block}. What we still
-need is the index inside the \textit{block}. This is computed inside the $j$
-loop by converting $\bar{i}$ to the corresponding index.
+Next, \textit{inv2} computes before the innermost loop the indices inside
+\textit{asg1d} of all $g-1$ parents corresponding to each \textit{block} of norm
+$g$. What is left to compute is the index within the \textit{block}. This is
+done inside $j$ loop using $\bar{i}$.
 
 \textit{inv3} starts from the observation that $(\bar{ll}, \bar{il})$ and
 $(\bar{lr}, \bar{ir})$, the \textit{levels} and \textit{index} vectors of the
 left and right parents, differ from $\bar{l}$ and $\bar{i}$ of the current point
-only in one dimension. Therefore, the conversion mentioned above is not
-necessary anymore, thus reducing the complexity from $\mathcal{O}(D)$ to
-$\mathcal{O}(1)$.
+only in one dimension. Therefore, we can reduce the complexity for computing the
+index within the \textit{block} from $\mathcal{O}(D)$ to $\mathcal{O}(1)$.
 
-Now, in the innermost loop over the current \textit{block}, what is left to
-compute is the conversion $(\bar{l}(t), \bar{i}(t)) \rightarrow (\bar{ll}(t),
-\bar{il}(t))$ and $(\bar{l}(t), \bar{i}(t)) \rightarrow (\bar{lr}(t),
-\bar{ir}(t))$ which has a complexity of $\mathcal{O}(\bar{l}(t))$.
+In the innermost loop over the current \textit{block}, now there are only the
+conversions $(\bar{l}(t), \bar{i}(t))$ $\rightarrow$ $(\bar{ll}(t),
+\bar{il}(t))$ and $(\bar{l}(t), \bar{i}(t))$ $\rightarrow$ $(\bar{lr}(t),
+\bar{ir}(t))$, which have a complexity of $\mathcal{O}(\bar{l}(t))$.
 \textit{inv4} precomputes the results of these conversions before the kernel
-launch and stores them in an array. The advantage is that the complexity of the
-innermost loop is now $\mathcal{O}(1)$, but at a cost of higher memory
-footprint.
+launch and stores them in an array. At a cost of higher memory footprint, we
+thus obtain $\mathcal{O}(1)$ for the innermost loop.
 
 Lastly, in order to improve memory locality and the data access patterns,
 \textit{ichg1} optimization does a loop interchange by moving the loop over the
@@ -144,47 +151,44 @@ only process one \textit{block}, but also all its parents.
 
 We move now to the algorithm for \textit{evaluation}
 (Alg.~\ref{alg:evaluation}). The coordinates of all $N$ points to be evaluated
-are stored contiguously in a matrix $x[N][D]$ which is processed in chunks by
-each warp, each warp computing one chunk of size $w$ in loop $j$. The memory
-access pattern for one thread inside of its chunk is the same as for
-\textit{hierarchization} algorithm where each thread computes points stored at
-indices multiple of 32 starting from the corresponding lane. The $g$ and $b$
-loops traverse \textit{groups} and \textit{blocks} respectively. \textit{idx23}
-is used to index the beginning of the current \textit{block} in \textit{asg1d},
-while \textit{idx1} idexes the current point in this \textit{block}. In line 13
-we compute the coefficient position, while in line 16 we evaluate the basis
-function in that point. Line 17 updates the current value of the coefficient
-exploiting the \textit{block}-level structure and exhibiting a non-sequential
-memory access pattern.
+are stored contiguously in a matrix $x[N][D]$ which is processed in chunks, each
+warp computing one chunk of size $w$ in loop $j$. The memory access pattern for
+the warps is the same as for \textit{hierarchization} algorithm where each
+thread computes points stored at indices multiple of 32 starting from the
+corresponding lane. The $g$ and $b$ loops traverse \textit{groups} and
+\textit{blocks}, respectively. \textit{idx23} is used to index the beginning of
+the current \textit{block} in \textit{asg1d}, while \textit{idx1} indexes the
+current point in this \textit{block}. In line 13 we compute the coefficient
+position, while in line 16 we evaluate the basis function in that point. Line 17
+updates the current value of the coefficient exploiting the \textit{block}-level
+structure and exhibiting a non-sequential memory access pattern.
 
-We start with optimizations for a better vectorization. For the CPU version,
-in \textit{vec1} we use loop unroll-and-jam, loop tiling and we vectorize the
+We start with optimizations for a better vectorization. In the CPU version,
+\textit{vec1} does loop unroll-and-jam, loop tiling, and vectorizes the
 innermost loop $t$. Software pipelining can be done in the unrolled loop, but
 $x$ is accessed with stride-$D$ instead of stride-1. Therefore, we change the
 layout of $x$ such that $x[j][t] \rightarrow \tilde{x}[(j/\textit{m2}) \cdot D +
 t][j \bmod \textit{m2}]$, where $\textit{m2}$ is the size of the tile. Now, a
 stride-1 access on $\tilde{x}$ is possible which makes SSE vectorization
-efficient. For GPUs, the observation we make is that the loop over dimensions on
-line 11 has a non-contiguous access pattern for a warp because at each read
-instruction the threads within a warp access elements found at $D$ distance.
-\textit{vec1'} improves this by using a technique similar to the one we
-described for both \textit{hierarchization} and \textit{evaluation} algorithms
-for increasing the throughput through memory coalescing by threads within a
-warp. More specific, \textit{vec1'} transposes the matrix $x$ such that instead
-of storing the points horizontally, one point per row, it stores them
-vertically in $\tilde{x}[(N/32+1) \cdot D][32]$. Thus, all threads in a warp
-access one row in this new matrix for each iteration over dimensions. This has a
-direct impact on GPU performance by coalescing the accesses to global memory and
-by avoiding memory bank conflicts.
+efficient. For GPUs, we note that the loop over dimensions in line 11 has a
+non-contiguous access pattern for a warp because at each read instruction,
+threads access elements found at $D$ distance. \textit{vec1'} improves this by
+using a technique similar to the one described before for both algorithms to
+increase the throughput through memory coalescing by threads within a warp.
+More specific, \textit{vec1'} transposes the matrix $x$ such that instead of
+storing the points horizontally, one point per row, it stores them vertically in
+$\tilde{x}[(N/32+1) \cdot D][32]$. Thus, all threads in a warp access one row in
+$\tilde{x}$ for each iteration over dimensions. This has a direct impact on
+GPU performance by coalescing the accesses to global memory and by avoiding
+memory bank conflicts.
 
 Regarding memory locality, \textit{ichg2} does a loop interchange by moving the
 loop over interpolation points from line 2 inside the loop over \textit{blocks}
-from line 6. In the case of GPUs, we have two variations. The first one,
-\textit{ichg2'} corresponds to \textit{ichg2} while the second one,
-\textit{ichg2''}, additionally moves the loops over \textit{groups} and
-\textit{blocks} outside the kernel. The goal of these optimizations is to
-improve read accesses by having the innermost loop as tight as possible over the
-block of memory.
+from line 6. In the case of GPUs, we have two variations. \textit{ichg2'}
+corresponds to \textit{ichg2}, while \textit{ichg2''} additionally moves the
+loops over \textit{groups} and \textit{blocks} outside the kernel. Their goal is
+to improve read accesses by having the innermost loop as tight as possible over
+the block of memory.
 
 The last optimization is a combination of strength reduction and loop invariant
 code motion introduced in order to speed up arithmetic operations.
@@ -195,26 +199,3 @@ loop and replaces them with multiplications with the inverse. In addition, $idx1
 \rfloor \cdot 2^{\textit{prefix\_sums}[t + 1]}$, where $\textit{prefix\_sums}[p]
 = \sum_{p=t}^{D-1}\bar{l}[p]$. This makes indexing a normal reduction and
 increases the instruction level parallelism.
-
-\begin{center}
-\begin{table*}[t]
-{\small
-\hfill{}
-\begin{tabular}{|c|l|l|}
-  \hline
-  \textbf{Category} & \textbf{Abbreviation} & \textbf{Optimizations} \\ 
-  \hline
-  Memory locality & \textit{ichg1}, \textit{ichg2} & loop interchange, loop tiling \\ 
-  \hline
-  Vectorization  & \textit{vec1} & loop unroll-and-jam, software pipelining \\ 
-  \hline
-  \multirow{2}{*}{Integers} & \textit{inv1}, \textit{inv2}, \textit{inv3}, \textit{inv4} & loop invariant code motion \\
-  \cline{2-3}
-  & \textit{sred1} & strength reduction, loop invariant code motion \\
-  \hline
-\end{tabular}}
-\hfill{}
-\caption{Summary of optimizations.}
-\label{table:optimizations}
-\end{table*}
-\end{center}
