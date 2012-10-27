@@ -24,20 +24,20 @@ GPUs~\cite{Volkov:2008:BGT:1413370.1413402}.
 When reasoning about code transformations that improve performance on a wide
 range of architectures, we do not want to lose ourselves in the details of the
 programming models since this often results in lower programming productivity.
-A more abstract view of the hardware focusing on hardware characteristics rather
-than programming models allows for more flexibility when adapting a code to a
-new architecture. For improved productivity and performance, our goal is to
-develop high-level code transformations that address characteristics common
-across different processors, namely CPUs and GPUs. In order to simplify the
-porting of an application to a new architecture, it is important to determine
-the similarities and differences between the old and the new architecture and
-map the optimizations accordingly. In defense of this statement, CPUs and GPUs
-both have vector units and array-of-structures to structure-of-arrays (AOS to
-SOA) is a transformation that often is required by both. Given the current
-convergence trend seen in CPUs and GPUs, i.e. CPUs have doubled the width of the
-SIMD units from SSE to AVX and GPUs have been equiped with a 2 level cache
-memory \cite{fermi}, we expect that increasingly more transformations, e.g. for
-locality, to be shared between codes for CPUs and GPUs.
+A more abstract view focusing on hardware characteristics rather than
+programming models allows for more flexibility when adapting code to new
+architectures. For improved productivity and performance, our goal is to develop
+high-level code transformations that address characteristics common across
+different processors, namely CPUs and GPUs. In order to simplify the porting of
+an application, it is important to determine the similarities and differences
+between the old and the new architecture and map the optimizations accordingly.
+In defense of this statement, CPUs and GPUs both have vector units and
+array-of-structures to structure-of-arrays is a transformation that often is
+required by both. Given the current convergence trend between CPUs and GPUs,
+i.e. CPUs have doubled the width of the SIMD units from SSE to AVX and GPUs have
+been equiped with a 2 level cache memory \cite{fermi}, we expect that
+increasingly more transformations, e.g. for locality, to be shared between codes
+for CPUs and GPUs.
 
 In order to support our ideas, we consider a computational steering application
 whose main goal is to provide real-time interaction with compressed simulation
@@ -80,8 +80,8 @@ The main contributions of our paper are as follows:
 \end{itemize}
 
 The rest of the paper is structured as follows. In
-Section~\ref{sec:related_work} we place our work in the field code optimizations
-and sparse grids, and relate to the published work.
+Section~\ref{sec:related_work} we place our work in the context of code
+optimizations and sparse grids, and relate to the published work.
 Section~\ref{sec:cpus_vs_gpus} highlights the similarities between CPUs and
 GPUs, allowing for a reuse of optimizations across architectures.
 Section~\ref{sec:comp_steering} introduces sparse grids and describes the core
