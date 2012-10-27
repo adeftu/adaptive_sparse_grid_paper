@@ -10,14 +10,9 @@ vectorization or many-cores. An eloquent example is Intel's Many Integrated
 Core Architecture (MIC) \cite{intel_mic} which is announced to include 512-bit
 wide vector registers and more than 50 cores per chip (in Knights Corner product
 line). On the other hand, GPUs manufacturers started to include CPU-like
-features in their products. Nvidia's Fermi \cite{fermi} was the first GPU
-generation from Nvidia featuring a cache coherent memory and today all devices
-tend to have a cache hierarchy similar to the one on CPUs.
-
-Nonetheless, when performance becomes a priority, programming the GPUs requires
-being aware of some architectural features that are different. We will describe
-in the following subsections the current GPU architectures using CUDA terminology and
-provide some brief guidelines for programming Nvidia cards.
+features in their products. Fermi \cite{fermi} was the first GPU generation from
+Nvidia featuring a cache coherent memory and today all devices tend to have a
+cache hierarchy similar to the one on CPUs.
 
 \subsection{GPU Architecture}
 
@@ -33,52 +28,47 @@ concurrent threads. One such multiprocessor is composed of several lanes, or
 \textit{Scalar Processors} (SP), and has a dedicated shared memory for fast
 access by the threads running on it. The thread-execution manager automatically
 schedules threads on processors without the need from the programmer for writing
-explicit code for this. The execution is done in groups of 32 threads, called
+explicit code. The execution is done in groups of 32 threads, called
 \textit{warps}, such that every instruction is broadcast synchronously to all
 the active threads in a \textit{warp}. The degree of parallelism is high when
-all these 32 threads execute the same instruction and very low when thread
-divergence caused by branching occurs. This is an important factor to consider
-when writing code for GPUs with performance in mind.
+all these 32 threads execute the same instruction and very low when branching
+causes thread divergence.
 
 Each thread has a small local private memory. Threads are grouped in
 \textit{blocks}. Each \textit{block} has a shared memory accessible by all
-threads in the \textit{block}. Specifically designed for graphics processing,
-the cards are also equipped with read-only, fast, on-chip memories like constant
-and texture caches which are used for different purposes. For example the first
-one is optimized for latency, while the second one for bandwidth. Finally, there
-is also the global memory which has the largest capacity, but is the slowest
-among all. Starting with the Fermi architecture, a finer level of control is
-possible for configuring how the allocations of these memories is done for the
-\textit{kernels}, giving the programmer more flexibility, but with the cost of
-exposing details and complexities of the underlying architecture.
+threads in the \textit{block}. Designed for graphics processing, the cards are
+also equipped with dedicated, read-only, on-chip memories: constant cache for
+low latency and texture cache for high bandwidth. Finally, there is also the
+global memory which has the largest capacity, but is the slowest. Starting with
+the Fermi architecture, a finer level of control is possible for configuring how
+the allocation of these memories is done, giving the programmer more
+flexibility, but at the cost of exposing complexities of the underlying
+architecture.
 
 \subsection{GPU Programming}
 
-While SIMD code on CPUs can be written using assembly code, a high-level
-language like C (with intrinsic functions), libraries such as Intel Array
-Building Blocks or just relying on a compiler with auto-vectorizing
-capabilities, Nvidia GPUs are usually  programmed through their dedicated
-framework, called CUDA. CUDA allows the programmer to define functions
-(\textit{kernels}) to be executed in parallel by many threads on different
-processors. When the \textit{kernels} are launched on the GPU, a given topology
-must be specified. Threads are grouped in \textit{thread blocks} which are laid
-in a grid. Each \textit{thread block} has a unique 3d index which gives its
-position in the grid, while each thread has a 3d index identifying the thread in
-a \textit{block}. This aspect allows uni-, bi-, and three-dimensional
-topologies, the right configuration being chosen depending on the problem to be
-solved. Threads in a \textit{block} are scheduled to be run on a single SM, fact
-that allows only the synchronization among the threads from a single
-\textit{block} using the \emph{\_\_syncthreads} barrier. Also, these threads can
-share data among themselves through the shared memory of the SM.
+While SIMD code on CPUs can be written using assembly, a high-level language
+like C (with intrinsic functions), libraries such as Intel Array Building Blocks
+or just relying on a compiler with auto-vectorizing capabilities, Nvidia GPUs
+are usually  programmed through their dedicated framework, called CUDA. CUDA
+allows the programmer to define functions, or \textit{kernels}, to be executed
+in parallel by many threads on different processors. When the \textit{kernels}
+are launched on the GPU, a given topology must be specified. Threads are grouped
+in \textit{thread blocks} which are laid in a grid. Each \textit{thread block}
+has a unique 3d index which gives its position in the grid, while each thread
+has a 3d index identifying the thread in a \textit{block}. This allows uni-,
+bi-, and three-dimensional topologies, the right configuration depending on the
+problem to solve. Threads in a \textit{block} are scheduled to be run on a
+single SM. This means synchronization is only possible among threads in the same
+\textit{block}, using the \emph{\_\_syncthreads} barrier. These threads can also
+share data through the shared memory of the SM.
 
-Usually when choosing to write code for GPUs, performance is the most important
-reason for this decision. Optimizations address mostly thread scheduling and
-memory access. In the first category the most important ones are choosing the
-right topology when launching the \textit{kernel}, thus maximizing the number of
-active threads per SM, and trying to avoid or at least minimize the number of
-divergent branches that could lead to a serial execution of threads composing a
-\textit{warp}. Regarding memory hierarchy, it is preferable to use the faster 
-on-chip memories whenever possible, to reduce the number of bank conflicts when
-accessing the shared memory and to reduce the number of memory transactions to
-main memory through coalescing. We applied these optimizations to our
-application, but for a detailed list we refer the reader to \cite{cuda}.
+Optimizations on GPUs address mostly thread scheduling and memory access. The
+most important ones in the first category are maximizing the number of active
+threads per SM by choosing the right \textit{kernel} topology and minimizing the
+number of divergent branches in a \textit{warp} that could lead to a serial
+execution. Regarding the memory hierarchy, it is preferable to use on-chip
+memories whenever possible, to reduce the number of bank conflicts when
+accessing the shared memory, and to reduce the number of memory transactions to
+main memory through coalescing. For a detailed list of optimizations we refer
+the reader to \cite{cuda}.

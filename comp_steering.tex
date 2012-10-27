@@ -2,17 +2,17 @@
 \label{sec:comp_steering}
 
 Our application is the visualization of compressed, high-dimensional data
-resulting from simulations \cite{Butnaru201156}. It is a well known fact that
-managing the data coming from functions with high number of dimensions has an
-exponential complexity on the number of dimensions. Therefore, we compress the
-data using the sparse grid technique in order to reduce its size and we
-decompress it afterwards for real-time visualization. For this purpose we use
-the \textit{fastsg} library~\cite{murarasu12fastsg:}.
+resulting from simulations \cite{Butnaru201156}. It is well known that managing
+data coming from high-dimensional functions has an exponential complexity on the
+number of dimensions. Therefore, we compress the data using the sparse grid
+technique in order to reduce its size and decompress it afterwards for real-time
+visualization. For this purpose we use the \textit{fastsg}
+library~\cite{murarasu12fastsg:}.
 
 The main idea behind sparse grids is that we can approximate a $D$-dimensional
 function $f : \Omega \rightarrow \mathbb{R}$, where $\Omega = [0, 1]^{D}$, by
-discretizing $\Omega$ and representing $f$ as a weighted sum of basis functions.
-If we consider \textit{levels} $\bar{l} = (l_{1},\ldots,l_{D})$ and
+discretizing $\Omega$ and representing $f$ as a weighted sum of \textit{basis
+functions}. If we consider \textit{levels} $\bar{l} = (l_{1},\ldots,l_{D})$ and
 \textit{index} $\bar{i} = (i_{1},\ldots,i_{D})$ vectors in $\mathbb{N}^{D}$,
 then each basis function will be centered at points $\bar{x}_{\bar{l},\bar{i}} =
 (x_{l_{1},i_{1}},\ldots,x_{l_{D},i_{D}}) \in \mathbb{Q}^{D}$, for which $x_{l,i}
@@ -22,15 +22,16 @@ pair $(\bar{l},\bar{i})$. Thus,
 
 \[ f \approx \sum_{\bar{x}_{\bar{l},\bar{i}}} \alpha_{\bar{l},\bar{i}} \cdot
 \phi_{\bar{l},\bar{i}} \]
-where $\alpha_{\bar{l},\bar{i}}$ is the weight, or hierarchical coefficient, and
-$\phi_{\bar{l},\bar{i}}$ is the basis function centered at grid point
-$\bar{x}_{\bar{l},\bar{i}}$. In our case, $\phi_{\bar{l},\bar{i}}$ is obtained
-by multiplying $D$ one-dimensional functions $\phi_{l,i} = h(2^{l}x - i)$, where
-$h$ is the standard hat function $h(x) = max(1 - |x|, 0)$:
+where $\alpha_{\bar{l},\bar{i}}$ is the weight, or \textit{hierarchical
+coefficient}, and $\phi_{\bar{l},\bar{i}}$ is the basis function centered at
+grid point $\bar{x}_{\bar{l},\bar{i}}$. In our case, $\phi_{\bar{l},\bar{i}}$ is
+obtained by multiplying $D$ one-dimensional functions $\phi_{l,i} = h(2^{l}x -
+i)$, where $h$ is the standard hat function $h(x) = max(1 - |x|, 0)$:
 
 \[ \phi_{\bar{l},\bar{i}}(\bar{x}) = \prod_{t=1}^{D} \phi_{l,i}(x_{t}) .\]
 
-The truncated sparse grid, $\Omega_a \subseteq \Omega_r$, identified by a given constraint vector $\underline{c}$, is the set of points
+The \textit{truncated sparse grid}, $\Omega_a \subseteq \Omega_r$, identified by
+a given constraint vector $\underline{c}$, is the set of points
 \begin{equation*}
 \Omega_a := \{\bar{x}_{\bar{l}, \bar{i}} : |\bar{l}|_1 \leq L
 + D - 1, l_t \leq c_t,  t \in \{1, \dots, D\}\}.
@@ -42,20 +43,19 @@ Compressing a general function represented on a full grid is done by selecting
 only the function values at grid points also contained in the sparse grid $\Omega_a$. 
 Many points are excluded from the full grid using the $\Omega_a$ discretization,
 thus resulting in a form of lossy compression. 
-The sparse grid theory is based on the fact that the excluded points have a reduced 
-contribution to the approximation \cite{CambridgeJournals:227245}. The consequence is
-that for sufficiently smooth functions, removing the points does not deteriorate the
-accuracy that much compared to full grids. 
+Sparse grids theory is based on the fact that the excluded points have a reduced
+contribution to the approximation \cite{CambridgeJournals:227245}. The
+consequence is that for sufficiently smooth functions, removing the points does
+not significantly deteriorate the accuracy compared to full grids.
 Compression is reduced to computing the hierarchical coefficients $\alpha$,
-process called \textit{hierarchization}. Decompression (also referred to as
-sparse grid \textit{evaluation} or \textit{interpolation}) refers to evaluating
-the sparse grid approximation anywhere inside the domain by summing up the
-contributions of the basis functions averaged by their hierarchical
-coefficients. This technique also enables us to interpolate at points for which
-we do not have values from simulation. Hence, it can provide hints on the
-simulation outside the initial data. In our case, decompression is a form of
-interpolation based on the sparse grid technique described in
-\cite{CambridgeJournals:227245}.
+process called \textit{hierarchization}. Decompression, also called
+\textit{evaluation} or \textit{interpolation}, refers to evaluating the sparse
+grid approximation anywhere inside the domain by summing up the contributions of
+the basis functions averaged by their hierarchical coefficients. This also
+enables us to interpolate at points for which we do not have values from
+simulation. Hence, it can provide hints on the simulation outside the initial
+data. In our case, decompression is based on the sparse grid technique described
+in \cite{CambridgeJournals:227245}.
 
 \begin{figure}[t]
   \begin{subfigure}[b]{1\linewidth}
@@ -86,11 +86,10 @@ Similar to wavelet compression, we also have here a hierarchical representation 
 to different scales or levels of detail. The contribution of the coefficients reduces as
 this level increases.
 
-Sparse grid compression has 4 input parameters: the number of dimensions
-($D$), the refinement level ($L$), the
-precision ($P$) (single or double precision), and the truncation ($T$)
-(dimensionally truncated or regular). $T$ gives the possibility of reducing the
-computational effort when using functions where not all dimensions carry
+Sparse grid compression has 4 input parameters: number of dimensions $D$,
+refinement level $L$, precision $P$ (single or double precision), and truncation
+$T$ (dimensionally truncated or regular). $T$ gives the possibility of reducing
+the computational effort when using functions where not all dimensions carry
 equal weight. Therefore, instead of storing all regular grids, we can exclude
 some of them when the information on those dimensions is not critical (see Fig.
 \ref{fig:truncated_sparse_grid_deco_2}). In our case, this translates to
@@ -102,40 +101,37 @@ the refinement level in the other dimension (height).
 
 Fig.~\ref{fig:truncated_sparse_grid_deco_1} shows how a sparse grid can be
 represented as a sequence of regular grids, grouped by their norm into several
-refinement levels, which we will call them \textit{groups} from now on. The grids
-in one \textit{group} will be referred as \textit{blocks}. Note that \textit{blocks} should not be confused 
-with CUDA thread \textit{blocks}. Instead of using the
-traditional approach of storing the grids in trees and hash-tables, we are using
-bijection based data structure with minimum memory footprint
-\cite{Murarasu:2011:CDS:1941553.1941559}, which maps all $(\bar{l},\bar{i})$
-pairs to consecutive integer indices. Thus, all hierarchical coefficients of the
-grid will be stored efficiently in a 1-dimensional array.
+refinement levels, which will be simply referred to as \textit{groups}. The
+grids in one \textit{group} will be called \textit{blocks}\footnote{Grid
+\textit{blocks} should not be confused with CUDA thread \textit{blocks}.}.
+Instead of using the traditional approach of storing the grids in trees and
+hash-tables, we are using a bijection based data structure with minimum memory
+footprint \cite{Murarasu:2011:CDS:1941553.1941559}. All hierarchical
+coefficients are efficiently stored in a 1-dimensional array, by mapping
+$(\bar{l},\bar{i})$ pairs to consecutive integer indices.
 
-Compression the multi-dimensional function means computing the hierarchical
-coefficients, in a traditionally recursive manner by collecting the
+Compressing the multi-dimensional function translates to computing the
+hierarchical coefficients, in a traditionally recursive manner by collecting the
 contributions of all points and evaluating the basis functions in each
-dimension. Using the data structure and bijection mentioned above, we can use an
-iterative, i.e. non-recursive, algorithm for compression which is also suitable for
-GPUs. This algorithm is integer-bound but in the next section we will show how applying
-different loop transformation can make this algorithm memory bound.
+dimension. With the above data structure, we can use a non-recursive
+GPU-friendly algorithm for compression. Although this algorithm is
+integer-bound, the next section shows that it can be made memory-bound by
+applying different loop transformation.
 
 \subsection{Decompression}
 
 Interpolating at a given $D$-dimensional point means traversing the set of
-regular grids and computing the contribution of each regular grid on the result. For
-each regular grid a $D$-linear basis function ($\mathcal{O}(D)$) is built and
-evaluated at the point. Interpolating at one point uses exactly one value from each
-regular grid for scaling the basis function. Using this knowledge, we can now
-look at the influence of the inputs on performance. All of these parameters
-influence to some extent the performance behavior of interpolation, especially
-on the GPU.
+regular grids and computing the contribution of each one. For each regular grid,
+a $D$-linear basis function is built in $\mathcal{O}(D)$ and evaluated at that
+point. Interpolating at one point uses exactly one value from each regular grid
+for scaling the basis function. We can now analyse the influence of input
+parameters on the performance of interpolation, visible especially on GPUs.
 
-Sparse grid decompression has 5 input parameters: the number of dimensions
-($D$), the refinement level ($L$), the number of interpolation points ($N$), the
-precision ($P$) (single or double precision), and the truncation ($T$)
-(dimensionally truncated or regular). $D$ increases the computational intensity, 
-i.e. the ratio between the on-chip
-computation time and off-chip communication time. On GPU, a large $D$ causes an
-increased consumption of shared memory per thread reducing the benefits of
-multithreading. A large $L$ decreases the computational intensity since the size
-of the regular grids increases exponentially, i.e. from $2^0$ to $2^{L-1}$. 
+Sparse grid decompression has 5 input parameters: number of dimensions $D$,
+refinement level $L$, number of interpolation points $N$, precision $P$, and
+truncation $T$. $D$ increases the computational intensity, i.e. the ratio
+between the on-chip computation time and off-chip communication time. On GPU, a
+large $D$ causes an increased consumption of shared memory per thread reducing
+the benefits of multithreading. A large $L$ decreases the computational
+intensity since the size of the regular grids increases exponentially, i.e. from
+$2^0$ to $2^{L-1}$.
