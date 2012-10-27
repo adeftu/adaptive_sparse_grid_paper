@@ -1,5 +1,5 @@
 #TeXlipse project settings
-#Thu Oct 18 02:58:01 CEST 2012
+#Sat Oct 27 22:34:41 CEST 2012
 markTmpDer=true
 builderNum=2
 outputDir=bin/
@@ -9,6 +9,6 @@ outputFormat=pdf
 tempDir=tmp
 mainTexFile=ltg.tex
 outputFile=ltg.pdf
-langSpell=
+langSpell=en
 markDer=true
 srcDir=

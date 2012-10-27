@@ -1,32 +1,30 @@
 \section{Loop Transformations in \textit{fastsg}}
 \label{sec:optimizations}
 
-Most optimizations applied to numerical codes focus on loops since these are the
-places where most of the execution time is spent. In general, we expect the
-compiler to handle loop transformations. An overview of loop transformations
-performed by the compiler is presented in \cite{Bacon:1994:CTH:197405.197406}.
-We cover in our paper only a subset of those optimizations relevant for our
-discussion and our routines. Specifically, we focus on optimizations that
-improve the latency for memory access by exploiting the deep memory hierarchy
-of modern processors, optimizations that decrease the number of instructions
-executed and help vectorization, and those that speed up arithmetic operations
-with integers.
+The majority of optimizations applied to numerical codes focus on loops since
+these are the places where most of the execution time is spent. In general, we
+expect the compiler to handle loop transformations. An overview of loop
+transformations performed by the compiler is presented in
+\cite{Bacon:1994:CTH:197405.197406}. We cover in our paper only a subset of
+those optimizations relevant for our discussion and our routines. Specifically,
+we focus on optimizations that improve the latency for memory access by
+exploiting the deep memory hierarchy of modern processors, optimizations that
+decrease the number of instructions executed and help vectorization, and those
+that speed up arithmetic operations with integers.
 
 \subsection{Memory Locality}
 
 The first category includes transformations which improve memory locality. As
 pointed out in Section~\ref{sec:cpus_vs_gpus}, GPUs have started to borrow
 caches and scratchpad memories from CPUs, making them susceptible to a plethora
-of new optimizations. In defense of this statement, we refer to the loop tiling.
-\textit{Loop tiling} is a loop reordering transformation primarily used to
-improve cache reuse. In loop tiling, the iteration space is divided in tiles.
-The transformation is highly dependent on the memory hierarchy. If we take the
-case of GPUs, where each multiprocessor possesses a cache, the tile can be
-chosen in such manner that it fits into the cache, which would allow to assign
-one or more tiles to each microprocessor. Aggressive tiling is done for all the
-levels of memory, including registers, Level-1 cache, Level-2 cache, etc. The
-complexity of caches complicates compiler's task to produce efficient loop
-tiling transformations. An example of application for this kind of
+of new optimizations. \textit{Loop tiling} is a loop reordering transformation
+primarily used to improve cache reuse by dividing the iteration space into
+tiles. The transformation is highly dependent on the memory hierarchy. For GPUs
+the tile can be chosen such that it fits into the cache of the microprocessor,
+allowing the assignment of one or more tiles to each microprocessor. Aggressive
+tiling is done for all memory levels, including registers, L1 and L2 caches,
+etc. The complexity of caches complicates compiler's task to produce efficient
+loop tiling transformations. An example of application for this kind of
 transformation on GPUs is stencil codes \cite{volkov2010}, which was first
 developed for CPUs. In the same category of loop transformations that enhance
 locality, there is also \textit{loop interchange}, which exchanges the position
@@ -44,60 +42,46 @@ about automatic loop interchange on GPUs is presented in
 In the recent period, \textit{vectorization} has been gaining increased
 attention from developers. The current generation of processors from Intel,
 Sandy Bridge, contains 8-lane SIMD units (AVX), providing two times more
-throughput than the previous 4-lane SIMD units (SSE). Developers are interested
-to make use of the potential 8-fold speedup brought to the sequential code. In
-theory this can be achieved through vectorization performed by compilers.
-However, there are several factors that limit compilers' ability to vectorize a
-loop. As with other optimizations performed by compilers, it is important for
-compilers to get a correct view of data dependencies before deciding to
-vectorize a loop. Using pointers can create aliasing problems in this sense.
-Moreover, complex expressions used as array subscripts further complicate the
-data dependence analysis. In general, vectorization also requires stride-1
-accesses to memory in order to be efficient. As another important point, we
-mention that vectorization is built on top of other loop transformations.
-Sometimes the compiler does not reorder the loops and this does not allow for
-the innermost loop to be vectorized.
+throughput than the previous 4-lane SIMD units (SSE). In theory, automatic
+speedup can be achieved through vectorization performed by compilers. However,
+there are several factors that limit compilers' ability to vectorize a loop: 
+data dependencies, aliasing, indexing arrays with complex expressions,
+non-sequential access patterns, etc. Furthermore, vectorization is usually
+applied after other loop transformations. Hence, if the compiler does not
+reorder the loops, the innermost loop cannot be vectorized. We refer the reader
+to \cite{vec_guide} for a complete vectorization guide on Intel processors 
+and conclude that manual intervention is sometimes required to cope with
+such inhibitors.
 
-We do not provide here a detailed description of vectorization. Instead, we
-simply want to emphasize that it is an important optimization nowadays. Similar
-to the optimizations that target caches, human intervention is sometimes
-required to cope with the vectorization inhibitors. We refer the reader to
-\cite{vec_guide} for a complete vectorization guide for Intel processors.
-
-Among the loop restructuring transformations that help compilers we find loop
-unrolling, loop unroll-and-jam, and software pipelining. \textit{Loop unrolling}
-replicates the body of a loop a number of times referred to as the unrolling
-factor. This optimization also reduces the loop overhead and can improve the
-register, cache, and TLB locality. Another advantage is that more possibilities
-for reordering instructions are available, thus resulting in a better
-utilization of the instruction pipeline. The main disadvantage comes from
-increased size of the compiler generated code which puts more pressure on the
-instruction cache. \textit{Loop unroll-and-jam} is similar to unroll in the
-sense that it copies the body of one of the next inner loops some number of
-times equal to the unroll-and-jam factor. The generated inner loops are then
-fused together (or jammed). This transformation can lead to more independent
-instructions in the inner loop. Both loop unrolling and loop unroll-and-jam
-optimizations pave the way for instruction level parallelism, but on GPUs this
-also translates to a higher register usage, which in turn leads to a reduced
-microprocessor occupancy. However, these optimizations combined with various
+Among loop transformations that help compilers, there are loop unrolling, loop
+unroll-and-jam, and software pipelining. \textit{Loop unrolling} replicates the
+body of a loop a number of times referred to as the unrolling factor. This
+optimization also reduces the loop overhead and can improve the register, cache,
+and TLB locality. Another advantage is that more possibilities for reordering
+instructions are available, thus resulting in a better utilization of the
+instruction pipeline. The downside is an increase in size of the generated code
+which puts more pressure on the instruction cache. \textit{Loop unroll-and-jam}
+is similar to unroll in the sense that it copies the body of one of the next
+inner loops some number of times equal to the unroll-and-jam factor. The
+generated inner loops are then fused together, or jammed. This transformation
+can lead to more independent instructions in the inner loop. Both loop unrolling
+and loop unroll-and-jam pave the way for instruction level parallelism, but on
+GPUs this also translates to a higher register usage, which in turn leads to a
+reduced microprocessor occupancy. These optimizations combined with various
 other techniques proved successful when porting some kernels from linear
 algebra, like matrix multiplication \cite{Volkov:2008:BGT:1413370.1413402} or
 symmetric matrix vector product (SYMV) \cite{Nath:2011:OSD:2063384.2063392}.
 \textit{Software pipelining} implies reordering instructions from different
 iterations of a loop such that independent instructions are executed in
-sequence. This transformation is often used in combination with loop unrolling.
+sequence. It is often used in combination with loop unrolling.
 
 \subsection{Integer Operations}
 
-\textit{Strength reduction} involves replacing expensive operations with
-arithmetically equivalent ones, but less expensive. In our particular case,
-instead of using divisions inside the loop body, we precompute the inverses
-outside the loop and do multiplications instead. Another important optimization
-in this category is \textit{loop invariant code motion}. This is a data-flow
-based loop transformation that moves outside a loop the computation whose result
-does not modify between iterations. The obvious consequence is that the number
-of instructions executed decreases.
-
-With this presentation of transformations for modern processors, we move to the
-next part of the paper that describes how we applied these concepts specifically
-to our application.
+\textit{Strength reduction} involves replacing computationally expensive
+operations with arithmetically equivalent, but less expensive ones. In our
+particular case, instead of using divisions inside the loop body, we precompute
+the inverses outside the loop and do multiplications instead. Another important
+optimization in this category is \textit{loop invariant code motion}. This is a
+data-flow based loop transformation that moves outside a loop the computation
+whose result does not modify between iterations. The obvious benefit is a
+decrease in the number of instructions executed.
