@@ -2,7 +2,7 @@
 \label{sec:conclusion}
 
 In this paper we presented a series of loop transformations portable across
-multicore processors and accelerators applied in the context of a computational
+multicore processors and accelerators, applied in the context of a computational
 steering application. We argued that giving the architectural similitude of CPUs
 and GPUs seen both as vector processors with different vector units sizes and roughly
 same cache hierarchy, some optimizations, at least conceptually, should be the
@@ -19,6 +19,6 @@ We see the convergence of CPUs and GPUs both in terms of hardware features and
 programming languages. On heterogeneous systems OpenCL \cite{opencl} is slowly
 making its way, but it is not as mature as CUDA and remains similarly complex.
 OpenACC \cite{openacc} is a new standard with a lot of promise which focuses on
-parallelization of loop nests. These types of frameworks will take the burdon
+parallelization of loop nests. These types of frameworks will lift the burden
 of focusing on architectural differences when programming, while at the same
 time incorporating common transformations and using auto-tuning techniques.
