@@ -5,19 +5,19 @@ In this section we analyse the impact of the optimizations from
 Section~\ref{sec:op_strategies} on both CPU and GPU implementations.
 
 Our test system is a quad-core Intel Core i7-920 running at 2.67 GHz with
-Hyper-threading enabled. For compilation we use \textit{gcc 4.6} with flags
-``-O3 -march=native -funroll-loops -fargument-noalias -fopenmp''. The GPU card
-is GeForce GTX 480 from Nvidia (Fermi architecture) with 1.5 GB of total memory
-and 15 multiprocessors, each with 32 lanes operating at a clock speed of 1.4
-GHz. For programming the GPU, we started from the CPU code base and implemented
-the algorithms and optimizations with the established CUDA framework. The
-device supports CUDA Capability 2.0 which, among other features, includes the
-possibility for the same on-chip memory to be used for both L1 cache and shared
-memory. It can be configured as either 48 KB of L1 cache and 16 KB of shared
-memory, or vice versa. We use the first option for the \textit{evaluation}
-algorithm in order to cache the accesses to local and global memories and
-the temporary register spills. Compilation is done by \textit{Cuda Toolkit 4.1}
-with flags ``-arch=sm\_20''.
+Hyper-threading enabled. For compiling the sequential CPU version we use
+\textit{gcc 4.6} with flags ``-O3 -march=native -funroll-loops
+-fargument-noalias''. The GPU card is GeForce GTX 480 from Nvidia (Fermi
+architecture) with 1.5 GB of total memory and 15 multiprocessors, each with 32
+lanes operating at a clock speed of 1.4 GHz. For programming the GPU, we started
+from the CPU code base and implemented the algorithms and optimizations with the
+established CUDA framework. The device supports CUDA Capability 2.0 which, among
+other features, includes the possibility for the same on-chip memory to be used
+for both L1 cache and shared memory. It can be configured as either 48 KB of L1
+cache and 16 KB of shared memory, or vice versa. We use the first option for the
+\textit{evaluation} algorithm in order to cache the accesses to local and global
+memories and the temporary register spills. Compilation is done by \textit{Cuda
+Toolkit 4.1} with flags ``-arch=sm\_20''.
 
 \begin{figure}[t]
   \begin{subfigure}[t]{1\linewidth}
